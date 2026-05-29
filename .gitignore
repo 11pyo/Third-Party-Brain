@@ -1,0 +1,14 @@
+# OS / 편집기 잡파일
+Thumbs.db
+Desktop.ini
+.DS_Store
+*~
+*.swp
+.vscode/
+.idea/
+
+# 민감/로컬 산출물 (혹시라도 도구를 추가할 경우 대비 — 절대 커밋 금지)
+conversations.jsonl
+server.log
+*.local
+.env
