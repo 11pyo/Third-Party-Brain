@@ -20,7 +20,7 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
   - 영향: `archive-server.py`(log_conversation, do_POST, CONV_LOG 상수, datetime import), 신규 산출물 `conversations.jsonl`
   - 이유: 공유 검증 중 접속자 대화가 어디에도 안 남아(일회성 claude -p, 브라우저 메모리만) 피드백 검토 불가했음.
   - 주의: 로그에 입력 내용 그대로 저장됨 → 민감정보 입력 금지 원칙 유지. 로그는 호스트 PC 로컬 파일.
-- `[ALGO]` **동의어맵에 월 단위 정기업무 보강** — `월초/월별/정기/매달/이번달` 추가, 모두 `월별 오더생성(ZRSD0700)` + `월말결산(ZRSD1430, 결산)`을 함께 끌어오도록 매핑. 기존엔 "월초에 할 일" 질의가 `#sm-order-flow`만 반환하고 `#month-end-closing` 누락 → 답변에서 월말결산 빠짐. 수정 후 월초/월간/정기/이번달 질의 모두 top3에 `#month-end-closing` 포함.
+- `[ALGO]` **동의어맵에 월 단위 정기업무 보강** — `월초/월별/정기/매달/이번달` 추가, 모두 `월별 오더생성(커스텀 T-Code)` + `월말결산(결산 T-Code)`을 함께 끌어오도록 매핑. 기존엔 "월초에 할 일" 질의가 `#sm-order-flow`만 반환하고 `#month-end-closing` 누락 → 답변에서 월말결산 빠짐. 수정 후 월초/월간/정기/이번달 질의 모두 top3에 `#month-end-closing` 포함.
   - 영향: `archive-server.py::SEARCH_SYNONYMS`
   - 이유: "월초/월간 할 일" 류 정기업무 질의가 결산을 못 끌어와 답변 누락 발생.
 - `[DEPLOY]` 공유 모드(`--share`) 기동 시 **브라우저 자동 열기 주소를 localhost → LAN IP**로 변경. `browse_host = ip if cli.share else "localhost"`. 호스트 본인 브라우저에도 동료에게 줄 공유 링크(`http://{lan_ip}:5174`)가 바로 떠서 링크 복사 혼선 제거.
