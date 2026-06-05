@@ -16,6 +16,8 @@
 | 02 | 빌드업 프로세스 (어떻게 만들었나) | `02-buildup-process.human.md` |
 | 03 | 검색·인테이크 알고리즘 + 확장 임계점 | `03-algorithms-scaling.human.md` |
 | 04 | 새 아카이브 만들기 — 단계별 플레이북 | `04-replication-playbook.human.md` |
+| 05 | 운영 레이어 — 대시보드·충돌없는 로그·조직맵 | `05-operational-layer.human.md` |
+| 06 | 자동화·운영 안전 모델 | `06-automation-and-ops-model.human.md` |
 | — | 변경 이력 (수정 로그) | `CHANGELOG.human.md` |
 
 ## ⛔ 꼭 지켜야 할 규칙 — 변경 시 동기화

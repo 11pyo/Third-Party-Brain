@@ -3,13 +3,19 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-06-02
+last_updated: 2026-06-05
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
 # CHANGELOG (프로그램·알고리즘·구조)
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
+
+## 2026-06-05
+- `[DOC]` **운영 레이어·자동화 챕터 2개 신설** — `05-operational-layer.*`(무서버 대시보드·충돌없는 append-only id-merge 로그·AI유지 조직맵, INV-OL1~4), `06-automation-and-ops-model.*`(자가갱신 잠긴 스프레드시트 생성기·read-structure/guide-prod 모델·cross-repo 업적적재·공개수준 계층).
+  - 영향: `05-*`, `06-*`(신규), `00-INDEX.*`(read_order·agent instructions·아티클수 de-stale), `README.md`(구조 트리)
+  - 이유: 블루프린트가 코어(HTML+도구3)만 커버 → 실제로 더 크게 자란 운영/자동화 레이어 누락. 공개 sanitize 후 일반 패턴 추가.
+- `[DOC]` 커스텀 코드 식별자 일반화(공개 sanitize) + 아티클 수 하드코딩 de-stale(03·00-INDEX). 06-02 알고리즘 개선 push.
 
 ## 2026-06-02
 - `[ALGO]` **검색 컨텍스트 발췌를 '글 맨 앞 1800자'→'키워드 매칭 위치 주변 발췌'로 변경.** `search_relevant`가 본문을 `[:1800]`(항상 글 머리)로 잘라 넘기던 것을 신설 `extract_passage()`로 교체 — 키워드 첫 매칭 위치(−400/+1600) 발췌 + 글 머리(제목/도입 300자) 동봉, 상한 ~2200자. 매칭이 머리(≤300자)면 앞에서부터(기존 동일). `make_pattern()`을 search_relevant 내부 중첩 → 모듈 레벨로 승격(extract_passage와 공유).

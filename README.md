@@ -43,6 +43,8 @@ Third-Party-Brain/
    ├─ 02-buildup-process.*         빌드업 프로세스(구축 이력) · 흔한 함정
    ├─ 03-algorithms-scaling.*  ⭐  검색·인테이크 알고리즘 + 규모별 확장 임계점
    ├─ 04-replication-playbook.*    새 아카이브 만들기 단계별 절차
+   ├─ 05-operational-layer.*       운영 레이어 — 무서버 대시보드·충돌없는 로그·조직맵
+   ├─ 06-automation-and-ops-model.*  자동화·읽기전용 운영 안전모델·공개수준 계층
    └─ CHANGELOG.*                  프로그램·구조 변경 이력
 ```
 
