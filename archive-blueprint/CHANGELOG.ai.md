@@ -3,13 +3,29 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-05-29
+last_updated: 2026-06-02
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
 # CHANGELOG (프로그램·알고리즘·구조)
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
+
+## 2026-06-02
+- `[ALGO]` **검색 컨텍스트 발췌를 '글 맨 앞 1800자'→'키워드 매칭 위치 주변 발췌'로 변경.** `search_relevant`가 본문을 `[:1800]`(항상 글 머리)로 잘라 넘기던 것을 신설 `extract_passage()`로 교체 — 키워드 첫 매칭 위치(−400/+1600) 발췌 + 글 머리(제목/도입 300자) 동봉, 상한 ~2200자. 매칭이 머리(≤300자)면 앞에서부터(기존 동일). `make_pattern()`을 search_relevant 내부 중첩 → 모듈 레벨로 승격(extract_passage와 공유).
+  - 영향: `archive-server.py`(extract_passage 신규, make_pattern 모듈화, search_relevant 본문 추출부)
+  - 이유: 아티클이 길어지며(특히 ops-cts-procedure에 SR처리유형분기·테스트결과서양식·②변경필요 입력가이드 등 누적) **뒤쪽 최근 추가 내용이 검색에 걸려도 컨텍스트에서 잘려** Claude가 못 보던 문제. 스모크테스트: "테스트 결과서 양식"/"SR 변경 불필요"/"반제" 질의에서 깊은 내용 포함 확인.
+  - 계약 유지: `search_relevant(query)->[ctx]` 시그니처·컨텍스트 포맷(`[아티클: #id — title (cat)]\n{body}`) 불변 → 서버/프롬프트/자동스크롤 영향 없음(00-INDEX 불변식 무관).
+- `[ALGO]` **검색 동의어맵 확장** — `SEARCH_SYNONYMS`에 최근 핵심어 14개 키 추가(반제/차변/대변/전표흐름/배차/테스트결과서/적용승인/적용관리/판매단가/NETPR/수금계획/계산서/SR/CTS). data-tags ×3 가중치만 의존하던 신규 주제어 질의 보강.
+  - 영향: `archive-server.py::SEARCH_SYNONYMS`
+  - 이유: 최근 추가 아티클(회계기초·반품취소②·CTS절차 확장)의 핵심어가 동의어맵에 없어 표현 차이로 누락 위험.
+- `[ALGO]` **인테이크 정의-불일치 휴리스틱 추가** (archive-intake.py). 기존 `detect_conflict`(순서역전 4쌍)는 정의 충돌(한 코드가 글마다 'CR/DR이력'↔'반품이력'으로 어긋난 류)을 못 잡았음 → `detect_definition_divergence()` 신설: **사전 아티클(DICT_ARTICLES 9종)끼리** 같은 코드 뒤 '설명'을 글자 bigram Jaccard<0.18로 비교 → `[?] 정의 불일치 의심`. `_looks_definitional()`로 산문·링크 조각 제외, `_def_snippet()`은 CR/DR·I/O의 '/'를 보존. CONFLICT_PAIRS에 VF11→VL09·회계먼저/재고먼저 2쌍 추가.
+  - 영향: `archive-intake.py`(CODE_RE, DICT_ARTICLES, _def_snippet, _char_bigrams, _looks_definitional, detect_definition_divergence, run STEP 3b, CONFLICT_PAIRS)
+  - 이유: 정의 충돌(같은 코드 다른 설명)이 인테이크에서 안 잡혀 사람이 일일이 비교해야 했음. 사전끼리로 스코프를 좁혀 오탐 최소화.
+  - 검증: 단위테스트(사전끼리 충돌 검출 / 사전vs산문 무시 / 일관케이스 무플래그) + 실데이터(예시 코드 다수 오탐 0). 한계: 표현차·교차언급에 잔여 advisory 1~2건 가능(정밀도 한계, '오탐 가능' 라벨).
+- `[DOC]` 03-algorithms-scaling.*(검색 A절 발췌방식·인테이크 B절 3b·현재 N=58) 갱신.
+  - 영향: `03-algorithms-scaling.ai.md`, `03-algorithms-scaling.human.md`
+  - 참고: 본 변경들은 알고리즘 내부 개선으로 ARTIFACT MAP·CORE INVARIANTS 불변 → 00-INDEX 갱신 불요.
 
 ## 2026-05-29
 - `[STRUCTURE]` **블루프린트 폴더 이동** — `C:\Users\<user>\Documents\Third-Party-Brain` → `C:\My-Projects\Third-Party-Brain`. 동기화 체인 참조 경로(`SAP SD AI Indexable Archive\.claude\CLAUDE.md`의 블루프린트 경로) 1곳 갱신. 동기화 끊김 없음 검증 완료.
