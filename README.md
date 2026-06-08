@@ -45,6 +45,7 @@ Third-Party-Brain/
    ├─ 04-replication-playbook.*    새 아카이브 만들기 단계별 절차
    ├─ 05-operational-layer.*       운영 레이어 — 무서버 대시보드·충돌없는 로그·조직맵
    ├─ 06-automation-and-ops-model.*  자동화·읽기전용 운영 안전모델·공개수준 계층
+   ├─ 07-dashboard-operating-guide.*  대시보드 운영 규칙 & 사용법(문의로그 CLI·추가전용 id-병합)
    └─ CHANGELOG.*                  프로그램·구조 변경 이력
 ```
 

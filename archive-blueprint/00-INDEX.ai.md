@@ -3,9 +3,9 @@ doc_type: ai_reference
 audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
-version: 1.3
-last_updated: 2026-06-05
-read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, CHANGELOG]
+version: 1.5
+last_updated: 2026-06-08
+read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
 governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 블루프린트 동기화 + CHANGELOG 기록 의무 (아래 MANDATORY SYNC 참조)"
 ---
@@ -35,7 +35,8 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 2. 사용자가 기존 아카이브를 수정/확장 → `03-algorithms-scaling.ai.md`(인테이크 규칙) + 원본 `archive-structure.md` 먼저 읽기.
 3. 구조/기술 이해 필요 → `01-overview-architecture.ai.md`.
 4. "어떻게 만들어졌나" 이력 → `02-buildup-process.ai.md`.
-5. 대시보드/문의로그/조직맵 → `05-operational-layer.ai.md`. 정형보고 자동화/읽기전용 운영시스템 가이드/업적적재 → `06-automation-and-ops-model.ai.md`.
+5. 대시보드/문의로그/조직맵 (개념) → `05-operational-layer.ai.md`. 정형보고 자동화/읽기전용 운영시스템 가이드/업적적재 → `06-automation-and-ops-model.ai.md`.
+6. 대시보드 **운영 규칙·CLI 사용법** (실무 매뉴얼) → `07-dashboard-operating-guide.ai.md`.
 
 ## ARTIFACT MAP (원본 아카이브 구성물)
 | 파일 | 역할 | 비고 |
@@ -44,13 +45,17 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 | `archive-structure.md` | 경량 인덱스 (세션마다 전체 HTML 안 읽도록) | id·제목·라인·카운트 |
 | `archive-intake.py` | 신규 정보 인테이크 — 중복·충돌·배치 자동 판별 CLI | 동의어확장·충돌패턴·카테고리분류 |
 | `archive-menu.py` | 계층형 대화 메뉴 (검색/인테이크/현황/참조) | TUI |
-| `archive-server.py` | 로컬 AI 검색 서버 (claude CLI 연동) | API 키 불요. `--share`로 LAN 공유. 개인=127.0.0.1, 공유=0.0.0.0 바인딩 |
+| `archive-server.py` | 로컬 AI 검색 서버 (claude CLI 연동, BM25 랭킹) | API 키 불요. rank_bm25 의존(미설치 시 term-count fallback). `--share`로 LAN 공유. 개인=127.0.0.1, 공유=0.0.0.0 바인딩 |
 | `1_서버_개인모드.bat` | 개인 모드 기동 (localhost) | CP949 인코딩 / 더블클릭 실행 |
 | `2_서버_공유모드.bat` | 공유 모드 기동 (`--share`) | 콘솔에 LAN 링크·방화벽 안내 표시 |
 | `3_종료_개인모드.bat` | 개인 모드만 종료 (127.0.0.1:5174) | netstat→taskkill |
 | `4_종료_공유모드.bat` | 공유 모드만 종료 (0.0.0.0:5174) | netstat→taskkill |
 | `5_종료_전체.bat` | 켜진 서버 전부 종료 (:5174) | netstat→taskkill |
 | `conversations.jsonl` | 대화 로그 (자동 생성) — 질문/답변/시각/IP/참조 | 1줄=1대화 JSONL. 검증 대화 사후 검토용. 민감정보 미입력 원칙 |
+| `task-board.html` | (운영레이어) 무서버 대시보드 — 칸반 3보드(일회성·정기·문의), 정본 `tasks.md` 미러 | 상세 05·07 |
+| `tasks.md` | (운영레이어) 프로젝트 태스크 정본 — 마크다운 칸반·상세 | 상세 07 |
+| `inquiry-log.js` | (운영레이어) 문의이력 데이터 — append-only id-merge push-log | ⚠️ 헬퍼 전용. 상세 05·07 |
+| `log-inquiry.py` | (운영레이어) 문의 로그 헬퍼 CLI — 1줄 append + id-merge + OS락 | 상세 07 |
 
 ## CORE INVARIANTS (절대 깨지면 안 되는 규칙)
 - INV1: 데이터 = 단일 HTML. 외부 DB 없음. 이식성·오프라인성 최우선.
@@ -64,7 +69,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 - INV9: 프론트 fetch는 `window.location.origin` 상대경로 (하드코딩 localhost 금지 — LAN 공유 시 타 PC에서 깨짐).
 
 ## SCALING TRIGGERS (요약 — 상세는 03 문서)
-- N≤200 아티클: 정규식 전문검색 + 태그 가중치 (현재 방식) 충분.
+- N≤200 아티클: BM25(char-2gram) 인메모리 랭킹 (현재 방식) 충분.
 - N>200: 동의어맵 유지보수 부담 ↑ → 카테고리 인덱스 분리 검토.
 - N>500: 단일 HTML 로딩/검색 비용 ↑ → SQLite FTS5 백엔드로 이전.
 - N>1000 또는 의미검색 요구: 임베딩 기반 시맨틱 검색(벡터 인덱스)로 전환.

@@ -11,7 +11,18 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
+## 2026-06-08
+- `[DOC]` **대시보드 운영 가이드 챕터 신설** — `07-dashboard-operating-guide.*`. 05-operational-layer(개념/INV-OL)의 실무 매뉴얼: ARTIFACTS 4(정본 `tasks.md`/화면 `task-board.html`/문의로그 `inquiry-log.js`/헬퍼 `log-inquiry.py`), BOARDS 3(일회성·정기·문의), HELPER CLI 계약(`--new`/`--id`/`--status`/`--done` + 필드스키마 + id-merge + OS락 동시성), RENDER 시맨틱(localStorage override + 변경분 export 역동기화), OPERATING RULES R1~R8, SANITIZATION/DENYLIST.
+  - 영향: `07-*`(신규), `00-INDEX.*`(read_order·agent routing·ARTIFACT MAP에 운영레이어 산출물 4종·version 1.4→1.5), `README.md`(구조 트리)
+  - 이유: 05는 운영레이어 *개념*만 → 일상 운용(대시보드 규칙·문의 CLI 사용법) 실무 문서 부재.
+  - 공개 sanitize: 데이터파일(`tasks.md`/`inquiry-log.js`) 비공개(고객명·문서·금액·실명 포함), 구조·규칙·익명예시만. DENYLIST=회사/고객/사람명·커스텀코드·문서/금액/사번·연락처.
+
 ## 2026-06-05
+- `[ALGO]` **검색 랭킹을 term-count → BM25(char-2gram)로 교체.** `search_relevant`의 스코어링(본문 +1 / 제목·태그 ×3)을 BM25Okapi 랭킹으로 교체. 서버 기동 시 `build_index()`가 각 아티클(제목+태그+본문)을 char-2gram 토큰화해 BM25 인덱스 1회 구축, 질의마다 `get_scores`로 top_n. 순수 랭킹 진입점 `rank_article_ids()` 신설(평가 스크립트가 직접 호출 → 배포본=평가본 동일 경로). **동의어 확장(expand_query)은 BM25 랭킹엔 미적용**(실측상 R@1 하락 — 흔한 코드 동의어가 무관 아티클을 끌어올림) → 패시지 추출·legacy fallback에서만 유지. extract_passage 발췌 로직·컨텍스트 포맷 불변. rank_bm25 미가용 시 기존 term-count 스코어링으로 graceful fallback(`_rank_legacy_scored`).
+  - 영향: `archive-server.py`(build_index/_tok_char2/_doc_text/_rank_scored/rank_article_ids 신규, search_relevant 랭킹부 교체, rank_bm25 의존 추가), `03-algorithms-scaling.*`(A절·C표), `00-INDEX.*`(SCALING TRIGGERS·ARTIFACT MAP)
+  - 이유: 구 스코어링은 IDF(흔한 코드 노이즈)·문서길이 정규화(긴 글 편향)가 없어 부정확. BM25가 정확히 이 둘을 보정.
+  - 검증: 오프라인 검색평가(실아카이브 65문서·49질의 라벨셋) — 구 R@1 42.9%/R@3 63.3% → 신 R@1 81.6%/R@3 85.7%(MRR 0.857, ~1.3ms/q). dense(MiniLM-multi)는 이 코퍼스 부적합(R@1 12%). 컴파일·fallback(_bm25=None)·패시지추출 스모크 통과.
+  - 계약 유지: `search_relevant(query)->[ctx]` 시그니처·컨텍스트 포맷(`[아티클: #id — title (cat)]\n{body}`)·아티클 id 불변 → 서버/프롬프트/자동스크롤·CORE INVARIANTS 무관.
 - `[DOC]` **운영 레이어·자동화 챕터 2개 신설** — `05-operational-layer.*`(무서버 대시보드·충돌없는 append-only id-merge 로그·AI유지 조직맵, INV-OL1~4), `06-automation-and-ops-model.*`(자가갱신 잠긴 스프레드시트 생성기·read-structure/guide-prod 모델·cross-repo 업적적재·공개수준 계층).
   - 영향: `05-*`, `06-*`(신규), `00-INDEX.*`(read_order·agent instructions·아티클수 de-stale), `README.md`(구조 트리)
   - 이유: 블루프린트가 코어(HTML+도구3)만 커버 → 실제로 더 크게 자란 운영/자동화 레이어 누락. 공개 sanitize 후 일반 패턴 추가.
