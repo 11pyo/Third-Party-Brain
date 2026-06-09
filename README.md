@@ -39,15 +39,15 @@
 Third-Party-Brain/
 ├─ README.md                ← (지금 이 파일) 시작점
 ├─ archive-blueprint/
-   ├─ 00-INDEX.*            진입점 · 아티팩트 맵 · 불변식(INV) · ⛔동기화 지침
-   ├─ 01-overview-architecture.*   개요 · 아키텍처 · 기술스택
-   ├─ 02-buildup-process.*         빌드업 프로세스(구축 이력) · 흔한 함정
-   ├─ 03-algorithms-scaling.*  ⭐  검색·인테이크 알고리즘 + 규모별 확장 임계점
-   ├─ 04-replication-playbook.*    새 아카이브 만들기 단계별 절차
-   ├─ 05-operational-layer.*       운영 레이어 — 무서버 대시보드·충돌없는 로그·조직맵
-   ├─ 06-automation-and-ops-model.*  자동화·읽기전용 운영 안전모델·공개수준 계층
-   ├─ 07-dashboard-operating-guide.*  대시보드 운영 규칙 & 사용법(문의로그 CLI·추가전용 id-병합)
-   └─ CHANGELOG.*                  프로그램·구조 변경 이력
+│  ├─ 00-INDEX.*            진입점 · 아티팩트 맵 · 불변식(INV) · ⛔동기화 지침
+│  ├─ 01-overview-architecture.*   개요 · 아키텍처 · 기술스택
+│  ├─ 02-buildup-process.*         빌드업 프로세스(구축 이력) · 흔한 함정
+│  ├─ 03-algorithms-scaling.*  ⭐  검색·인테이크 알고리즘 + 규모별 확장 임계점
+│  ├─ 04-replication-playbook.*    새 아카이브 만들기 단계별 절차
+│  ├─ 05-operational-layer.*       운영 레이어 — 무서버 대시보드·충돌없는 로그·조직맵
+│  ├─ 06-automation-and-ops-model.*  자동화·읽기전용 운영 안전모델·공개수준 계층
+│  ├─ 07-dashboard-operating-guide.*  대시보드 운영 규칙 & 사용법(문의로그 CLI·추가전용 id-병합)
+│  └─ CHANGELOG.*                  프로그램·구조 변경 이력
 └─ reference-implementation/
    └─ dashboard/            ⭐ 실행 가능한 익명 동작본 — 07 챕터 대시보드(더블클릭 실행, 가상 샘플)
 ```
