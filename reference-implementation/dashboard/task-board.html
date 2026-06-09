@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>운영 Task 대시보드 (샘플)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+         background:#f1f5f9; color:#1e293b; }
+  header { background:#1a2744; color:#fff; padding:16px 22px; }
+  header h1 { margin:0; font-size:18px; }
+  header .sub { font-size:12px; opacity:.8; margin-top:4px; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; padding:12px 22px; background:#fff;
+            border-bottom:1px solid #e2e8f0; font-size:12px; align-items:center; }
+  .chip { display:inline-flex; align-items:center; gap:5px; }
+  .dot { width:11px; height:11px; border-radius:3px; display:inline-block; }
+  .dev { background:#2563eb; } .ops { background:#16a34a; }
+  .ts { background:#ea580c; } .adm { background:#94a3b8; }
+  .board { display:flex; gap:14px; padding:18px 22px; overflow-x:auto; align-items:flex-start; }
+  .col { background:#e9eef5; border-radius:10px; min-width:270px; flex:1; padding:10px; }
+  .col h2 { font-size:13px; margin:4px 6px 10px; display:flex; justify-content:space-between; }
+  .col h2 .cnt { background:#1a2744; color:#fff; border-radius:12px; padding:0 8px; font-size:11px; }
+  #board .col-cards.scroll { max-height:540px; overflow-y:auto; padding-right:4px; }   /* 완료 컬럼만 높이 고정·스크롤 */
+  .card { background:#fff; border-radius:8px; padding:10px 12px; margin-bottom:10px;
+          border-left:5px solid #cbd5e1; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .card .head { cursor:pointer; }
+  .card .detail { cursor:auto; user-select:text; }
+  .card.dev { border-left-color:#2563eb; }
+  .card.ops { border-left-color:#16a34a; }
+  .card.ts  { border-left-color:#ea580c; }
+  .card .id { font-size:11px; font-weight:700; letter-spacing:.3px; white-space:nowrap; }
+  .card.dev .id { color:#2563eb; } .card.ops .id { color:#16a34a; }
+  .card .id-wrap { display:flex; flex-wrap:wrap; align-items:center; gap:5px; min-width:0; }
+  .card .t-req { font-size:10.5px; font-weight:700; color:#3730a3; background:#eef2ff;
+                 border:1px solid #c7d2fe; border-radius:5px; padding:0 6px; line-height:1.55; }
+  .card .title { font-size:13px; font-weight:600; margin:3px 0 6px; line-height:1.4; }
+  .card .meta { font-size:11px; color:#64748b; line-height:1.6; }
+  .card .next { margin-top:6px; font-size:11px; background:#fef9c3; color:#854d0e;
+                border-radius:5px; padding:4px 7px; }
+  .card .warn { background:#fee2e2; color:#991b1b; }
+  .detail { display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;
+            font-size:12px; line-height:1.7; white-space:pre-wrap; }
+  .card.open .detail { display:block; }
+  .hint { text-align:center; font-size:11px; color:#94a3b8; padding:0 0 18px; }
+  a { color:#2563eb; }
+  /* ── 카드 편집 기능 ── */
+  .card .head .row1 { display:flex; justify-content:space-between; align-items:flex-start; gap:6px; }
+  .card .head .row1 .editbtn { flex:0 0 auto; }
+  .editbtn { font-size:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#475569;
+             border-radius:5px; padding:1px 7px; cursor:pointer; line-height:1.6; flex:none; }
+  .editbtn:hover { background:#e2e8f0; }
+  .card.edited { box-shadow:0 0 0 2px #f59e0b inset, 0 1px 3px rgba(0,0,0,.08); }
+  .editform label { display:block; font-size:11px; color:#475569; margin:7px 0 0; font-weight:600; }
+  .editform input, .editform select, .editform textarea {
+        width:100%; font-size:12px; padding:5px 6px; border:1px solid #cbd5e1;
+        border-radius:5px; font-family:inherit; margin-top:3px; }
+  .editform textarea { resize:vertical; line-height:1.6; white-space:pre; }
+  .ebtns { display:flex; gap:6px; margin-top:10px; }
+  .ebtns button { font-size:12px; padding:5px 11px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer; }
+  .ebtns .save { background:#2563eb; color:#fff; border-color:#2563eb; font-weight:600; }
+  .ebtns .cancel { background:#fff; }
+  .ebtns .revert { background:#fff; color:#b45309; border-color:#fdba74; margin-left:auto; }
+  .editbar { padding:8px 22px; background:#fff7ed; border-bottom:1px solid #fed7aa;
+             font-size:12px; color:#9a3412; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .editbar button { font-size:11px; padding:3px 9px; border-radius:5px; border:1px solid #fdba74;
+                    background:#fff; color:#9a3412; cursor:pointer; }
+  .editbar button:disabled { opacity:.45; cursor:default; }
+  .editbar .warn-txt { color:#b91c1c; }
+  .ovl { position:fixed; inset:0; background:rgba(15,23,42,.55); display:flex; align-items:center;
+         justify-content:center; z-index:50; padding:20px; }
+  .ovl .box { background:#fff; border-radius:10px; padding:16px; width:min(680px,100%); max-height:86vh;
+              display:flex; flex-direction:column; gap:10px; }
+  .ovl .box h3 { margin:0; font-size:14px; }
+  .ovl textarea { flex:1; min-height:300px; font-family:ui-monospace,Consolas,monospace; font-size:12px;
+                  border:1px solid #cbd5e1; border-radius:6px; padding:8px; white-space:pre; }
+  /* ── 정기업무(주/월/연) 보드 ── */
+  .sec-title { padding:14px 22px 0; font-size:13px; font-weight:700; color:#334155; }
+  .sec-title small { font-weight:400; color:#94a3b8; font-size:11px; margin-left:6px; }
+  .board.recur .col { background:#eef2ff; }
+  .board.recur .col h2 .cnt { background:#4338ca; }
+  .cadence { display:inline-block; font-size:10px; font-weight:700; border-radius:4px;
+             padding:0 5px; margin-left:6px; vertical-align:middle; }
+  .cadence.wk { background:#dbeafe; color:#1e40af; }
+  .cadence.mo { background:#dcfce7; color:#166534; }
+  .cadence.yr { background:#fef3c7; color:#92400e; }
+  /* ── 일반·단순 문의 패널 ── */
+  .inq-panel { margin:0 22px 16px; background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; }
+  .inq-note { font-size:12px; color:#3730a3; line-height:1.7; background:#eef2ff; border:1px solid #c7d2fe;
+              border-radius:8px; padding:8px 10px; margin-bottom:10px; }
+  .inq-panel table { width:100%; border-collapse:collapse; font-size:12px; }
+  .inq-panel th, .inq-panel td { border:1px solid #e2e8f0; padding:6px 9px; text-align:left; vertical-align:top; line-height:1.6; }
+  .inq-panel th { background:#f1f5f9; font-weight:700; color:#334155; }
+  .inq-panel td a { color:#4338ca; text-decoration:none; font-weight:600; }
+  .inq-panel td a:hover { text-decoration:underline; }
+  .inq-foot { font-size:11px; color:#94a3b8; margin-top:8px; }
+  /* ── 문의 처리 이력 보드 (접수/진행중/대기/완료) ── */
+  #inqboard .col-cards { display:flex; flex-direction:column; gap:8px; }
+  #inqboard .col-cards.scroll { max-height:360px; overflow-y:auto; padding-right:4px; }
+  .inq-card { background:#fff; border:1px solid #e2e8f0; border-left:4px solid #cbd5e1;
+              border-radius:7px; padding:7px 9px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+  .inq-card.urg  { border-left-color:#dc2626; }
+  .inq-card.gen  { border-left-color:#2563eb; }
+  .inq-card.simp { border-left-color:#16a34a; }
+  .inq-card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:6px; margin-bottom:3px; }
+  .inq-type { font-size:10px; font-weight:700; border-radius:4px; padding:1px 6px; flex:0 0 auto; white-space:nowrap; }
+  .inq-type.urg  { background:#fee2e2; color:#991b1b; }
+  .inq-type.gen  { background:#dbeafe; color:#1e40af; }
+  .inq-type.simp { background:#dcfce7; color:#166534; }
+  .inq-date { font-size:10px; color:#94a3b8; }
+  .inq-q { font-size:12px; font-weight:600; color:#1e293b; line-height:1.45; }
+  .inq-a { font-size:11px; color:#475569; margin-top:3px; line-height:1.5; }
+  .inq-ref { margin-top:3px; } .inq-ref a { font-size:11px; color:#4338ca; text-decoration:none; }
+  .inq-ref a:hover { text-decoration:underline; }
+  .inq-empty { font-size:11px; color:#cbd5e1; text-align:center; padding:8px; }
+  .inq-code { font-size:12px; font-weight:700; color:#1e293b; letter-spacing:.2px;
+              font-family:ui-monospace,Consolas,monospace; }
+  .inq-code-wrap { display:flex; flex-wrap:wrap; align-items:center; gap:5px; min-width:0; }
+  .inq-req { font-size:11px; font-weight:700; color:#3730a3; background:#eef2ff;
+             border:1px solid #c7d2fe; border-radius:5px; padding:1px 7px; white-space:nowrap; }
+  .inq-foot-line { font-size:10px; color:#94a3b8; margin-top:5px; padding-top:4px;
+                   border-top:1px dashed #eef2f7; }
+  /* ── 완료 전체보기 버튼 + 큰화면 모달 ── */
+  .col h2 .h2-right { display:inline-flex; align-items:center; gap:6px; }
+  .viewall-btn { font-size:10px; font-weight:700; border:1px solid #94a3b8; background:#fff;
+                 color:#334155; border-radius:5px; padding:1px 8px; cursor:pointer; line-height:1.65; white-space:nowrap; }
+  .viewall-btn:hover { background:#1a2744; color:#fff; border-color:#1a2744; }
+  .fv-ovl { position:fixed; inset:0; background:rgba(15,23,42,.6); display:flex; align-items:center;
+            justify-content:center; z-index:60; padding:24px; }
+  .fv-box { background:#f1f5f9; border-radius:12px; width:min(1320px,97vw); max-height:92vh;
+            display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+  .fv-head { display:flex; align-items:center; justify-content:space-between; gap:10px;
+             padding:13px 18px; background:#1a2744; color:#fff; border-radius:12px 12px 0 0; flex:0 0 auto; }
+  .fv-head h3 { margin:0; font-size:15px; }
+  .fv-close { background:rgba(255,255,255,.16); border:none; color:#fff; font-size:16px; font-weight:700;
+              width:30px; height:30px; border-radius:7px; cursor:pointer; line-height:1; }
+  .fv-close:hover { background:rgba(255,255,255,.32); }
+  .fv-grid { overflow-y:auto; padding:18px; display:grid; gap:12px; align-items:start;
+             grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); }
+  .fv-grid .card { margin-bottom:0; }
+  .fv-grid .card .detail { display:block; max-height:340px; overflow:auto; }
+  .fv-grid .card .head { cursor:default; }
+  .fv-grid .editbtn { display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 운영 Task 대시보드 <span style="font-size:12px;opacity:.7;">(샘플)</span></h1>
+  <div class="sub">정본: <code>tasks.md</code> · 카드 클릭=펼치기 / <b>✏️수정=직접 편집(브라우저 저장)</b> · ⚠️ 모든 데이터는 <b>가상 샘플</b>입니다</div>
+</header>
+<div class="legend">
+  <strong style="font-size:12px;">분류:</strong>
+  <span class="chip"><span class="dot dev"></span>DEV 개발</span>
+  <span class="chip"><span class="dot ops"></span>OPS 운영</span>
+  <span class="chip"><span class="dot ts"></span>TS 트러블슈팅</span>
+  <span class="chip"><span class="dot adm"></span>ADM 행정</span>
+  <span style="margin-left:auto;color:#64748b;">상태: 📥접수 · 🔵진행중 · ⏸️대기 · ✅완료</span>
+</div>
+<div class="editbar" id="editbar"></div>
+<div class="sec-title">🔁 정기업무 <small>주례·월례·연례 — 캘린더·트리거 기반 (상태 칸반과 분리)</small></div>
+<div class="board recur" id="recurboard"></div>
+<div class="sec-title">🗂️ 일회성 · 프로젝트 <small>접수 → 진행중 → 대기 → 완료</small></div>
+<div class="board" id="board"></div>
+
+<div class="sec-title">💬 일반·단순 문의 <small>ITSM 안내·조회성 처리 — 자주 받는 문의 빠른 응대표</small></div>
+<div class="inq-panel">
+  <div class="inq-note">
+    <b>단순 문의</b> = 시스템 변경 없이 <b>안내·조회</b>로 끝(데이터·소스 변경 X). <b>일반 요청</b> = 개발/SR 아닌 일반 처리.<br>
+    ※ <b>시스템(데이터·소스) 변경이 필요하면 → 정식 변경요청(SR)</b>으로 전환. (아래 표는 형식 예시 — 실제 코드·내용은 도메인에 맞게 채움)
+  </div>
+  <table>
+    <thead><tr><th>자주 받는 문의</th><th>1줄 답변 / 처리</th><th>참조</th></tr></thead>
+    <tbody>
+      <tr><td>사용자/계정 찾는 법</td><td>표준 사용자 조회 트랜잭션으로 확인</td><td>#some-article</td></tr>
+      <tr><td>타 담당자 내역도 조회하고 싶다</td><td>조회 화면권한(레벨 부여) 안내</td><td>#some-article</td></tr>
+      <tr><td>정기 보고는 언제/무엇을 하나</td><td>매월 N번째 영업일, 표준 절차표 참조</td><td>#some-article</td></tr>
+    </tbody>
+  </table>
+  <div class="inq-foot">※ 새 문의 유형이 반복되면 여기 행 추가(정본 <code>tasks.md</code> 동기화). 표준 답변을 모아두면 단순 문의를 빠르고 일관되게 응대.</div>
+</div>
+
+<div class="sec-title">📋 문의 처리 이력 <small id="inqcount"></small> <small>(접수→진행중→대기→완료 · 일반/단순/긴급 문의 — <code>inquiry-log.js</code> · 완료열은 스크롤)</small></div>
+<div class="board" id="inqboard"></div>
+
+<div class="hint">※ ✏️수정은 <b>이 브라우저(localStorage)에만</b> 저장됩니다. 정본 <code>tasks.md</code>는 자동 반영되지 않으니, 편집바의 <b>「변경분 내보내기」</b>로 동기화하세요.</div>
+
+<script src="inquiry-log.js"></script>
+<script>
+// ── Task 데이터 (tasks.md 와 동기화) · ⚠️ 전부 가상 샘플 ──
+const TASKS = [
+  { id:'DEV-001', cls:'dev', status:'진행중',
+    title:'리포트 화면에 신규 컬럼 추가',
+    req:'영업팀 A매니저', due:'요청 2026-06-01',
+    next:'개발·테스트 완료, 이관 승인 대기 → 승인 후 운영 반영', warn:false,
+    detail:
+`[요청] 기존 리포트 화면에 단가 컬럼 1개 추가.
+[설계] 표시옵션 체크박스로 show/hide 독립 제어. 데이터는 항상 로드, 표시만 토글.
+[교훈(샘플)] 개발=개발 클라이언트 / 테스트=테스트 클라이언트로 분리. 메인 활성화 ≠ 인클루드 활성화.
+[상태] 단위테스트 통과. 이관(전송요청) 승인 대기.` },
+
+  { id:'DEV-002', cls:'dev', status:'대기',
+    title:'외부 시스템 ↔ ERP 데이터 연계 (인계 조사)',
+    req:'전임자(인계)', due:'트리거 대기',
+    next:'대기 — 재개 트리거=현업 신규 의뢰서. 재개 시 연계 I/F 로직 파악 → 미완 모듈 완성', warn:false,
+    detail:
+`[인계조사] 전임자 미완 프로젝트. 코드 수정·이관 없이 조사만 진행.
+[상태] 일부 모듈 비활성(미완성) — 활성화 전 중단. 그대로 이관 불가.
+[재개 조건] 현업의 신규 의뢰서 수신 시 착수.` },
+
+  { id:'TS-001', cls:'ts', status:'진행중',
+    title:'특정 화면 간헐 오류 조사',
+    req:'헬프데스크', due:'재현 확인 중',
+    next:'로그/덤프 분석 중 — 입력값 특정 조건에서만 재현. 원인 좁히는 중', warn:true,
+    detail:
+`[증상] 특정 입력 조합에서만 오류. 상시 아님.
+[조사] 표준 덤프 분석 도구로 스택 확인 → 변환 로직의 예외 입력 의심.
+[다음] 입력 가드 추가 후 회귀 테스트.` },
+
+  { id:'OPS-001', cls:'ops', status:'접수',
+    title:'정기 운영 보고서 작성 요청',
+    req:'기획팀 B담당', due:'이번 주 내',
+    next:'요청 접수 — 데이터 추출 → 보고 양식 작성 → 송부', warn:false,
+    detail:
+`[요청] 월간 운영 현황 보고서 1부.
+[절차] 운영시스템에서 대상 기간 추출 → 표준 양식 작성 → 메일 송부.` },
+
+  { id:'OPS-002', cls:'ops', status:'완료',
+    title:'사용자 조회 화면권한 부여',
+    req:'C팀 사원', due:'2026-05-30 완료',
+    next:'완료 — 조회 권한 부여, 정상 동작 확인', warn:false,
+    detail:
+`[완료] 담당자가 본인 외 내역도 조회할 수 있도록 화면권한 부여.
+[처리] 권한관리 화면에서 조회 레벨 부여. 사용자 ID는 사용자 조회로 확인.` },
+
+  { id:'OPS-003', cls:'ops', status:'대기', recurring:true, cadence:'주례',
+    title:'주간 데이터 정합 모니터링',
+    req:'운영 (정기)', due:'매주 월요일 오전',
+    next:'매주 월요일 — 전주 전표/잔액 정합 점검 → 이상 시 담당 통보', warn:false,
+    detail:
+`[주례] 매주 초 전주 데이터 정합성 점검. 이상 0건이면 통과.
+[항목] 미처리 전표·잔액 불일치 점검 → 해당 담당자 협의.` },
+
+  { id:'OPS-004', cls:'ops', status:'대기', recurring:true, cadence:'월례',
+    title:'월말 결산 후속 작업',
+    req:'회계·기획팀 (정기)', due:'매월 3번째 영업일 오전',
+    next:'결산 완료 연락 수신 → 검증(금액 대사) → 마감월 저장 → 실적 저장·일치 검증', warn:false,
+    detail:
+`[월례] 결산일=매월 3번째 영업일. 회계팀 결산 후 후속 작업 담당.
+[절차] 결산 완료 연락 → 매출계 금액 대사(두 리포트 일치) → 마감월 저장 → 실적 저장 → 삼중 일치 검증.` },
+
+  { id:'OPS-005', cls:'ops', status:'대기', recurring:true, cadence:'연례',
+    title:'조직개편 데이터 팀별 이관',
+    req:'인사팀 (조직개편 요청)', due:'연례(트리거)',
+    next:'지금 할 일 아님 — 매년 초 조직개편 요청 시 착수', warn:false,
+    detail:
+`[연례] 평시 대기, 인사팀 조직개편 요청이 트리거.
+[절차] 팀별 이관 양식 취합 → 대상 문서/오더 이관 → 진행현황 점검.` },
+];
+
+const COLS = [
+  {key:'접수',   label:'📥 접수'},
+  {key:'진행중', label:'🔵 진행중'},
+  {key:'대기',   label:'⏸️ 대기'},
+  {key:'완료',   label:'✅ 완료'},
+];
+
+// ── 편집(localStorage) ────────────────────────────────────────────
+const LS_KEY = 'sd-task-overrides-v1';
+const EDITABLE = ['status','title','req','due','next','detail'];
+const STATUSES = ['접수','진행중','대기','완료'];
+let overrides = loadOverrides();
+function loadOverrides(){ try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch(e){ return {}; } }
+function saveOverrides(){ localStorage.setItem(LS_KEY, JSON.stringify(overrides)); }
+function mergedTasks(){ return TASKS.map(t => ({ ...t, ...(overrides[t.id] || {}) })); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return esc(s).replace(/"/g,'&quot;'); }
+
+const RECUR_COLS = [
+  {key:'주례', label:'📅 주례'},
+  {key:'월례', label:'🗓️ 월례'},
+  {key:'연례', label:'📆 연례'},
+];
+const board = document.getElementById('board');
+const recurboard = document.getElementById('recurboard');
+const editbar = document.getElementById('editbar');
+
+function render(){
+  const tasks = mergedTasks();
+  renderBoard(recurboard, RECUR_COLS, tasks.filter(t => t.recurring), 'cadence');
+  renderBoard(board, COLS, tasks.filter(t => !t.recurring), 'status');
+  renderBar();
+}
+
+function renderBoard(boardEl, cols, items, groupKey){
+  boardEl.innerHTML = '';
+  cols.forEach(c => {
+    const list = items.filter(t => (t[groupKey] || '') === c.key).reverse();   // 최신순(최근 추가/이동이 위)
+    const col = document.createElement('div');
+    col.className = 'col';
+    const viewAll = (c.key === '완료' && list.length) ? `<button class="viewall-btn" type="button">⤢ 전체보기</button>` : '';
+    col.innerHTML = `<h2><span>${c.label}</span><span class="h2-right"><span class="cnt">${list.length}</span>${viewAll}</span></h2>`;
+    const wrap = document.createElement('div');
+    wrap.className = 'col-cards' + (c.key === '완료' ? ' scroll' : '');   // 완료 컬럼만 높이고정·스크롤
+    list.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'card ' + t.cls + (overrides[t.id] ? ' edited' : '');
+      card.innerHTML = viewHTML(t);
+      card.querySelector('.head').addEventListener('click', (e) => {
+        if (e.target.closest('.editbtn')) return;           // 수정 버튼 클릭은 토글 제외
+        if (window.getSelection && String(window.getSelection())) return; // 드래그 선택 중 토글 안 함
+        card.classList.toggle('open');
+      });
+      card.querySelector('.editbtn').addEventListener('click', (e) => { e.stopPropagation(); openEdit(card, t); });
+      wrap.appendChild(card);
+    });
+    col.appendChild(wrap);
+    const vab = col.querySelector('.viewall-btn');
+    if (vab) vab.addEventListener('click', () => {
+      const cards = list.map(t => `<div class="card ${t.cls}">${viewHTML(t)}</div>`).join('');
+      const where = boardEl.id === 'board' ? ' — 일회성·프로젝트' : '';
+      openFullView(`${c.label}${where} (${list.length}건)`, cards);
+    });
+    boardEl.appendChild(col);
+  });
+}
+
+// ── 완료 카드 큰화면 모달 (전체보기) ─────────────────────────────────
+function openFullView(title, innerHTML){
+  const ovl = document.createElement('div');
+  ovl.className = 'fv-ovl';
+  ovl.innerHTML =
+    `<div class="fv-box">` +
+      `<div class="fv-head"><h3>${esc(title)}</h3><button class="fv-close" title="닫기 (Esc)">✕</button></div>` +
+      `<div class="fv-grid">${innerHTML || '<div class="inq-empty">완료된 카드가 없습니다.</div>'}</div>` +
+    `</div>`;
+  document.body.appendChild(ovl);
+  function onKey(e){ if (e.key === 'Escape') close(); }
+  function close(){ ovl.remove(); document.removeEventListener('keydown', onKey); }
+  document.addEventListener('keydown', onKey);
+  ovl.querySelector('.fv-close').onclick = close;
+  ovl.addEventListener('click', (e) => { if (e.target === ovl) close(); });
+}
+
+function cadCls(c){ return c==='주례'?'wk':c==='월례'?'mo':c==='연례'?'yr':''; }
+function viewHTML(t){
+  const cad = (t.recurring && t.cadence) ? `<span class="cadence ${cadCls(t.cadence)}">🔁${esc(t.cadence)}</span>` : '';
+  const dueLabel = t.recurring ? '주기/다음' : '기한';
+  return `<div class="head">` +
+      `<div class="row1"><span class="id-wrap"><span class="id">${esc(t.id)}${cad}${overrides[t.id]?' ✏️':''}</span>` +
+        (t.req ? `<span class="t-req">👤 ${esc(t.req)}</span>` : '') +
+      `</span><button class="editbtn" title="이 카드 직접 수정">✏️ 수정</button></div>` +
+      `<div class="title">${esc(t.title)}</div>` +
+      `<div class="meta">${dueLabel}: ${esc(t.due)}</div>` +
+      `<div class="next ${t.warn?'warn':''}">▶ ${esc(t.next)}</div>` +
+    `</div>` +
+    `<div class="detail">${esc(t.detail)}</div>`;
+}
+
+function openEdit(card, t){
+  card.classList.add('open');
+  const isR = !!t.recurring;
+  const firstField = isR
+    ? `<label>주기 <select name="cadence">${['주례','월례','연례'].map(s=>`<option ${s===t.cadence?'selected':''}>${s}</option>`).join('')}</select></label>`
+    : `<label>상태 <select name="status">${STATUSES.map(s=>`<option ${s===t.status?'selected':''}>${s}</option>`).join('')}</select></label>`;
+  const fields = isR ? ['cadence','title','req','due','next','detail'] : ['status','title','req','due','next','detail'];
+  card.innerHTML =
+    `<div class="editform">` +
+      `<div class="id">${esc(t.id)} 수정${isR?' (정기업무)':''}</div>` +
+      firstField +
+      `<label>제목 <input name="title" value="${escAttr(t.title)}"></label>` +
+      `<label>요청 <input name="req" value="${escAttr(t.req)}"></label>` +
+      `<label>${isR?'주기/다음':'기한'} <input name="due" value="${escAttr(t.due)}"></label>` +
+      `<label>다음 액션 <input name="next" value="${escAttr(t.next)}"></label>` +
+      `<label>상세 <textarea name="detail" rows="9">${esc(t.detail)}</textarea></label>` +
+      `<div class="ebtns">` +
+        `<button class="save">저장</button>` +
+        `<button class="cancel">취소</button>` +
+        `<button class="revert">기본값 복원</button>` +
+      `</div>` +
+    `</div>`;
+  const f = card.querySelector('.editform');
+  card.querySelector('.save').addEventListener('click', () => {
+    const def = TASKS.find(x => x.id === t.id) || {};
+    const o = {};
+    fields.forEach(k => {
+      const val = f.querySelector(`[name="${k}"]`).value;
+      if (val !== (def[k] == null ? '' : def[k])) o[k] = val;  // 기본값과 다른 필드만 저장
+    });
+    if (Object.keys(o).length) overrides[t.id] = o;            // 실제 변경 있을 때만 override
+    else delete overrides[t.id];                                // 무변경이면 override 제거
+    saveOverrides();
+    render();
+  });
+  card.querySelector('.cancel').addEventListener('click', render);
+  card.querySelector('.revert').addEventListener('click', () => {
+    delete overrides[t.id]; saveOverrides(); render();
+  });
+}
+
+function renderBar(){
+  const n = Object.keys(overrides).length;
+  editbar.innerHTML =
+    `<span>✏️ 카드 <b>수정</b>→이 브라우저 저장 · 변경 <b>${n}건</b></span>` +
+    `<button id="exp"${n?'':' disabled'}>📤 변경분 내보내기(JSON)</button>` +
+    `<button id="rst"${n?'':' disabled'}>전체 초기화</button>` +
+    (n ? `<span class="warn-txt">※ 정본 tasks.md엔 자동 반영 안 됨 — 내보내서 동기화(저에게 붙여주면 반영)</span>`
+       : `<span style="color:#b08968;">(수정하면 여기 버튼이 활성화됩니다)</span>`);
+  if (n){
+    editbar.querySelector('#exp').onclick = exportJSON;
+    editbar.querySelector('#rst').onclick = () => {
+      if (confirm('이 브라우저에 저장된 모든 카드 수정을 지우고 기본값(tasks.md 기준)으로 되돌릴까요?')){
+        overrides = {}; saveOverrides(); render();
+      }
+    };
+  }
+}
+
+function exportJSON(){
+  const json = JSON.stringify(overrides, null, 2);
+  const ovl = document.createElement('div');
+  ovl.className = 'ovl';
+  ovl.innerHTML =
+    `<div class="box">` +
+      `<h3>변경분(JSON) — 복사해서 tasks.md 동기화에 사용</h3>` +
+      `<textarea readonly></textarea>` +
+      `<div class="ebtns"><button class="save" id="cp">클립보드 복사</button>` +
+      `<button class="cancel" id="cls">닫기</button></div>` +
+    `</div>`;
+  document.body.appendChild(ovl);
+  const ta = ovl.querySelector('textarea');
+  ta.value = json; ta.focus(); ta.select();
+  ovl.querySelector('#cp').onclick = () => {
+    ta.select();
+    try { navigator.clipboard.writeText(json); } catch(e){ try { document.execCommand('copy'); } catch(_){} }
+    ovl.querySelector('#cp').textContent = '복사됨 ✓';
+  };
+  const close = () => ovl.remove();
+  ovl.querySelector('#cls').onclick = close;
+  ovl.addEventListener('click', (e) => { if (e.target === ovl) close(); });
+}
+
+render();
+
+// ── 문의 처리 이력 보드 (id 병합 2단계 · 접수/진행중/대기/완료) ──
+const INQ_COLS = [
+  {key:'접수',   label:'📥 접수'},
+  {key:'진행중', label:'🔵 진행중'},
+  {key:'대기',   label:'⏸️ 대기'},
+  {key:'완료',   label:'✅ 완료'},
+];
+function inqCard(e){
+  const t = e.type || '단순문의';
+  const cls = t === '긴급문의' ? 'urg' : (t === '일반요청' ? 'gen' : 'simp');
+  return `<div class="inq-card ${cls}">` +
+    `<div class="inq-card-top"><span class="inq-code-wrap"><span class="inq-code">${esc(e.id||'(코드없음)')}</span>` +
+      (e.req ? `<span class="inq-req">👤 ${esc(e.req)}</span>` : '') +
+    `</span><span class="inq-type ${cls}">${esc(t)}</span></div>` +
+    `<div class="inq-q">${esc(e.q||'')}</div>` +
+    (e.a ? `<div class="inq-a">▶ ${esc(e.a)}</div>` : '') +
+    (e.ref ? `<div class="inq-ref"><a href="${esc(e.ref)}">${esc(e.ref)}</a></div>` : '') +
+    `<div class="inq-foot-line">${esc(e.date||'')}${e.by ? ' · ' + esc(e.by) : ''}</div>` +
+  `</div>`;
+}
+function renderInquiryLog(){
+  const board = document.getElementById('inqboard');
+  const cnt = document.getElementById('inqcount');
+  const raw = window.INQUIRY_LOG || [];
+  const merged = {}, ids = [];
+  raw.forEach((e, i) => {
+    const id = e.id || ('_' + i);
+    if (!(id in merged)) { merged[id] = {}; ids.push(id); }
+    Object.assign(merged[id], e);            // 같은 id면 나중 push가 덮어씀(상태 전이 병합)
+  });
+  const all = ids.map(id => merged[id]);
+  const undone = all.filter(e => (e.status || '접수') !== '완료').length;
+  if (cnt) cnt.textContent = `총 ${all.length}건` + (undone ? ` · 미완 ${undone}` : '');
+  if (!board) return;
+  board.innerHTML = '';
+  INQ_COLS.forEach(c => {
+    const items = all.filter(e => (e.status || '접수') === c.key).reverse();   // 최신 위
+    const col = document.createElement('div');
+    col.className = 'col';
+    const scroll = c.key === '완료' ? ' scroll' : '';
+    const viewAll = (c.key === '완료' && items.length) ? `<button class="viewall-btn" type="button">⤢ 전체보기</button>` : '';
+    col.innerHTML = `<h2><span>${c.label}</span><span class="h2-right"><span class="cnt">${items.length}</span>${viewAll}</span></h2>` +
+      `<div class="col-cards${scroll}">${items.map(inqCard).join('') || '<div class="inq-empty">—</div>'}</div>`;
+    board.appendChild(col);
+    const vab = col.querySelector('.viewall-btn');
+    if (vab) vab.addEventListener('click', () => openFullView(`${c.label} — 문의 처리 이력 (${items.length}건)`, items.map(inqCard).join('')));
+  });
+}
+renderInquiryLog();
+
+</script>
+</body>
+</html>

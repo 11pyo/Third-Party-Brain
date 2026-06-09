@@ -10,6 +10,7 @@ related: [05-operational-layer]
 # DASHBOARD — OPERATING RULES & USAGE
 
 > 05-operational-layer = 개념/불변식(INV-OL1~4). 이 문서 = 운영 규칙(R1~R8) + 헬퍼 CLI 계약 + 렌더 시맨틱.
+> ▶ 실행 가능한 익명 동작본: `reference-implementation/dashboard/` (task-board.html·inquiry-log.js·log-inquiry.py·tasks.md, 데이터=가상 샘플).
 
 ## ARTIFACTS (4)
 | 파일 | 역할 | writer |

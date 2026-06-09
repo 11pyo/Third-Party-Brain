@@ -11,6 +11,12 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
+## 2026-06-09
+- `[STRUCTURE]` **대시보드 익명 동작본(참조 구현) 추가** — `reference-implementation/dashboard/`(`task-board.html`·`inquiry-log.js`·`log-inquiry.py`·`tasks.md`·`README.md`). 블루프린트 최초의 실행 가능 산출물(기존=문서만). 프로그램 골격(CSS+렌더JS)은 사내 `task-board.html`에서 verbatim 추출, 데이터는 가상 샘플로 교체(빌드 스크립트 조립, 조립물 금지어 assert 가드).
+  - 영향: `reference-implementation/dashboard/*`(신규), `README.md`(트리·"도구 소스 미포함" 단서에 대시보드 예외 명시), `00-INDEX.*`(agent routing·version 1.5→1.6), `07-*`(상단 동작본 포인터), `CHANGELOG.*`
+  - 검증: 헤드리스 렌더(preview)로 3보드·4상태·3주기·id-병합 정상·console 0 error. 다관점 적대 감사(critical/warning 0)+데니리스트 0.
+  - 이유: 챕터 07 설명을 '더블클릭 실행 예제'로 보강. 회사정보 0 원칙 유지(데이터=가상 샘플).
+
 ## 2026-06-08
 - `[DOC]` **대시보드 운영 가이드 챕터 신설** — `07-dashboard-operating-guide.*`. 05-operational-layer(개념/INV-OL)의 실무 매뉴얼: ARTIFACTS 4(정본 `tasks.md`/화면 `task-board.html`/문의로그 `inquiry-log.js`/헬퍼 `log-inquiry.py`), BOARDS 3(일회성·정기·문의), HELPER CLI 계약(`--new`/`--id`/`--status`/`--done` + 필드스키마 + id-merge + OS락 동시성), RENDER 시맨틱(localStorage override + 변경분 export 역동기화), OPERATING RULES R1~R8, SANITIZATION/DENYLIST.
   - 영향: `07-*`(신규), `00-INDEX.*`(read_order·agent routing·ARTIFACT MAP에 운영레이어 산출물 4종·version 1.4→1.5), `README.md`(구조 트리)

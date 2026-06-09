@@ -21,6 +21,8 @@
 | 07 | 대시보드 운영 가이드 — 규칙 & 사용법 | `07-dashboard-operating-guide.human.md` |
 | — | 변경 이력 (수정 로그) | `CHANGELOG.human.md` |
 
+> ⭐ **실행 예제**: `reference-implementation/dashboard/` — 07 챕터 대시보드를 **더블클릭하면 바로 도는** 익명 동작본(모든 데이터는 가상 샘플).
+
 ## ⛔ 꼭 지켜야 할 규칙 — 변경 시 동기화
 
 아카이브를 만지는 모든 사람·AI가 지켜야 합니다:
