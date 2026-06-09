@@ -1,5 +1,7 @@
 # Third-Party-Brain
 
+**🌐 Language: 한국어 (이 문서) · [English](./README.en.md)**
+
 > **검색 가능한 운영 지식 아카이브(AI-indexable operational knowledge archive)를 0에서 구축·운영·복제하기 위한 방법론(블루프린트).**
 
 무거운 데이터베이스나 서버 설치 없이 **파일 몇 개로 굴러가는** 가볍고 이식성 좋은 사내 지식 아카이브 패턴입니다.
@@ -14,17 +16,10 @@
 - **실행 동작본 바로 돌리기** — `reference-implementation/dashboard/`(브라우저로 열기, **빌드 불요**) ·
   `reference-implementation/archive/`(`pip install -r requirements.txt` → `python archive-server.py`).
 - **새 아카이브 만들기** — `archive-blueprint/04-replication-playbook` 절차대로.
-  - 이때 AI가 **먼저 당신에게 묻습니다(STEP 0)** → 주제(도메인)·카테고리·**저장 금지(민감정보) 목록**·코드 표기·동의어, 그리고 **실제 채울 지식 내용**(AI가 지어내지 않음). 대시보드까지면 상태·분류·태스크 데이터도. *(EN: the AI first asks you for the domain, categories, a do-not-store list, code notation, synonyms — and the real content to fill it.)*
+  - 이때 AI가 **먼저 당신에게 묻습니다(STEP 0)** → 주제(도메인)·카테고리·**저장 금지(민감정보) 목록**·코드 표기·동의어, 그리고 **실제 채울 지식 내용**(AI가 지어내지 않음). 대시보드까지면 상태·분류·태스크 데이터도.
 
 **준비물:** Python 3.8+ (아카이브 검색서버). ※ 아카이브의 *AI 자연어 답변* 기능만 로컬 `claude` CLI 필요 —
 검색·인테이크·대시보드는 CLI 없이도 동작.
-
-> **EN —** Clone, then tell your AI: **"Read `AGENTS.md` and set this up / run it."** It auto-onboards via
-> `AGENTS.md`(+`CLAUDE.md`) and does the intended thing — run the reference implementations
-> (`reference-implementation/dashboard/` opens in a browser with no build; `…/archive/` is
-> `pip install -r requirements.txt` then `python archive-server.py`), or replicate a new archive per
-> `archive-blueprint/04-replication-playbook`. Prereqs: Python 3.8+; a local `claude` CLI only for the
-> archive's AI-answer feature.
 
 ---
 
@@ -55,8 +50,6 @@
 **주 콘텐츠는 「지식 아카이브 + AI 협업」**입니다. `archive-blueprint/`의 설계·알고리즘·플레이북을 따라 직접 재현해도 되고, `reference-implementation/`의 동작본을 바로 돌려봐도 됩니다 — 데이터는 전부 가상 샘플입니다.
 - **아카이브 엔진** (`reference-implementation/archive/`): BM25 검색서버 · 인테이크 · TUI + 샘플 `archive.html`.
 - **AI 협업 대시보드** (`reference-implementation/dashboard/`): 동시기록 안전(추가전용 + id-병합) 칸반·문의보드. ※ **별도 전용 레포로도 존재** → https://github.com/11pyo/ai-collab-dashboard
-
-> 🌐 **English:** This repo = a methodology **blueprint** + runnable **anonymized reference implementations**. Primary content is the **knowledge archive + AI collaboration**. The dashboard is mirrored here under `reference-implementation/dashboard/` but **also has its own standalone repo** (link above). All data is fictional sample data. Full English onboarding: [`AGENTS.md`](./AGENTS.md) and [`README.en.md`](./README.en.md).
 
 ```
 Third-Party-Brain/

@@ -3,7 +3,7 @@
 > **A blueprint (methodology) — plus runnable reference implementations — for building, running,
 > and replicating an AI-indexable operational knowledge archive ("a third brain"), from scratch.**
 
-🌏 한국어: [`README.md`](./README.md) · 🤖 AI onboarding: [`AGENTS.md`](./AGENTS.md)
+**🌐 Language: [한국어](./README.md) · English (this page)** · 🤖 AI onboarding: [`AGENTS.md`](./AGENTS.md)
 
 A lightweight, portable pattern for an internal knowledge archive that runs on **a few files** — no
 heavy database, no server install. It's one HTML file (data + UI + search), a few Python tools, and
@@ -22,14 +22,10 @@ A fresh AI session auto-onboards via `AGENTS.md` (+ `CLAUDE.md`) and does the in
   (**no build**); `reference-implementation/archive/` is `pip install -r requirements.txt` then
   `python archive-server.py`.
 - **Replicate a new archive** for your own domain — follow `archive-blueprint/04-replication-playbook`.
-  - The AI first **asks you for (STEP 0)**: the domain · categories · a **do-not-store (sensitive) list** · code notation · synonyms — and **the real content to fill it** (it won't invent your knowledge). Plus statuses/classification/task data if you use the dashboard. *(한국어: AI가 주제·카테고리·민감정보 금지목록·코드표기·동의어 + 실제 콘텐츠를 먼저 물어봅니다.)*
+  - The AI first **asks you for (STEP 0)**: the domain · categories · a **do-not-store (sensitive) list** · code notation · synonyms — and **the real content to fill it** (it won't invent your knowledge). Plus statuses/classification/task data if you use the dashboard.
 
 **Prereqs:** Python 3.8+ (archive search server). The archive's *natural-language AI answer* feature
 also needs a local `claude` CLI — search/intake/dashboard work without it.
-
-> **한국어 —** 클론 후 AI에게 **"`AGENTS.md` 읽고 구성/실행해줘"** 라고 하면 `AGENTS.md`(+`CLAUDE.md`)로
-> 자동 온보딩해 의도대로 진행합니다. 동작본 실행(대시보드=무빌드, 아카이브=`pip install` 후 `python archive-server.py`)
-> 또는 `04-replication-playbook`로 새 아카이브 생성. 준비물: Python 3.8+; AI 답변 기능만 로컬 `claude` CLI 필요.
 
 ---
 
