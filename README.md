@@ -8,6 +8,25 @@
 
 ---
 
+## 🤖 AI로 바로 빌드·실행 · Build / run with an AI
+클론한 뒤 폴더를 AI 비서에게 주고 **"`AGENTS.md` 읽고 구성/실행해줘"** 라고 하면, 새 AI 세션이
+`AGENTS.md`(+`CLAUDE.md`)로 자동 온보딩해 의도대로 진행합니다:
+- **실행 동작본 바로 돌리기** — `reference-implementation/dashboard/`(브라우저로 열기, **빌드 불요**) ·
+  `reference-implementation/archive/`(`pip install -r requirements.txt` → `python archive-server.py`).
+- **새 아카이브 만들기** — `archive-blueprint/04-replication-playbook` 절차대로.
+
+**준비물:** Python 3.8+ (아카이브 검색서버). ※ 아카이브의 *AI 자연어 답변* 기능만 로컬 `claude` CLI 필요 —
+검색·인테이크·대시보드는 CLI 없이도 동작.
+
+> **EN —** Clone, then tell your AI: **"Read `AGENTS.md` and set this up / run it."** It auto-onboards via
+> `AGENTS.md`(+`CLAUDE.md`) and does the intended thing — run the reference implementations
+> (`reference-implementation/dashboard/` opens in a browser with no build; `…/archive/` is
+> `pip install -r requirements.txt` then `python archive-server.py`), or replicate a new archive per
+> `archive-blueprint/04-replication-playbook`. Prereqs: Python 3.8+; a local `claude` CLI only for the
+> archive's AI-answer feature.
+
+---
+
 ## 💡 이럴 때 특히 유용합니다 (활용 시나리오)
 
 ### 🚨 담당자가 급하게 퇴사할 때 — 인수인계 공백 메우기

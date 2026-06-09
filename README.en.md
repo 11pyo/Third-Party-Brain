@@ -15,6 +15,23 @@ The **primary content here is the knowledge archive + AI collaboration**.
 
 ---
 
+## 🤖 Build / run with an AI
+Clone, then hand the folder to your AI assistant and say: **"Read `AGENTS.md` and set this up / run it."**
+A fresh AI session auto-onboards via `AGENTS.md` (+ `CLAUDE.md`) and does the intended thing:
+- **Run the reference implementations** — `reference-implementation/dashboard/` opens in a browser
+  (**no build**); `reference-implementation/archive/` is `pip install -r requirements.txt` then
+  `python archive-server.py`.
+- **Replicate a new archive** for your own domain — follow `archive-blueprint/04-replication-playbook`.
+
+**Prereqs:** Python 3.8+ (archive search server). The archive's *natural-language AI answer* feature
+also needs a local `claude` CLI — search/intake/dashboard work without it.
+
+> **한국어 —** 클론 후 AI에게 **"`AGENTS.md` 읽고 구성/실행해줘"** 라고 하면 `AGENTS.md`(+`CLAUDE.md`)로
+> 자동 온보딩해 의도대로 진행합니다. 동작본 실행(대시보드=무빌드, 아카이브=`pip install` 후 `python archive-server.py`)
+> 또는 `04-replication-playbook`로 새 아카이브 생성. 준비물: Python 3.8+; AI 답변 기능만 로컬 `claude` CLI 필요.
+
+---
+
 ## 💡 Where this shines (use cases)
 
 ### 🚨 When someone leaves suddenly — closing the handover gap
