@@ -1,0 +1,3 @@
+# Search ranking. Optional but recommended — the server falls back to a simple
+# term-count scorer if this is not installed.
+rank-bm25>=0.2.2

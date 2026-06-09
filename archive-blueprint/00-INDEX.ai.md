@@ -3,7 +3,7 @@ doc_type: ai_reference
 audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
-version: 1.6
+version: 1.7
 last_updated: 2026-06-09
 read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
@@ -31,6 +31,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 다른 도메인(다른 ERP 모듈, 다른 회사, 일반 사내 위키)에도 그대로 응용 가능하다.
 
 ## IF YOU ARE AN AGENT, DO THIS
+0. **빠른 온보딩** → 루트 `AGENTS.md`(기능·룰·방향 한 장; Claude Code는 `CLAUDE.md` 자동 로드→여기로 유도) 먼저. 실행 가능한 동작본 = `reference-implementation/archive/`(아카이브 엔진: BM25 검색서버·인테이크·TUI + 샘플 `archive.html`) · `reference-implementation/dashboard/`(대시보드 — **별도 전용 레포 `11pyo/ai-collab-dashboard`**).
 1. 사용자가 "새 아카이브 만들어줘" / "이런 거 또 만들어줘" → `04-replication-playbook.ai.md` 로 점프.
 2. 사용자가 기존 아카이브를 수정/확장 → `03-algorithms-scaling.ai.md`(인테이크 규칙) + 원본 `archive-structure.md` 먼저 읽기.
 3. 구조/기술 이해 필요 → `01-overview-architecture.ai.md`.
@@ -56,6 +57,8 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 | `tasks.md` | (운영레이어) 프로젝트 태스크 정본 — 마크다운 칸반·상세 | 상세 07 |
 | `inquiry-log.js` | (운영레이어) 문의이력 데이터 — append-only id-merge push-log | ⚠️ 헬퍼 전용. 상세 05·07 |
 | `log-inquiry.py` | (운영레이어) 문의 로그 헬퍼 CLI — 1줄 append + id-merge + OS락 | 상세 07 |
+
+> **`reference-implementation/`** (이 저장소의 공개 동작본): `archive/`(위 도구들의 익명 실행본 — `archive-server.py`·`archive-intake.py`·`archive-menu.py` + 샘플 `archive.html` 9art/5cat) · `dashboard/`(운영레이어 동작본). 데이터는 전부 가상 샘플. 대시보드는 **별도 전용 레포 `11pyo/ai-collab-dashboard`** 로도 존재. 루트 `AGENTS.md`·`CLAUDE.md`가 새 AI 세션 자동 온보딩을 담당.
 
 ## CORE INVARIANTS (절대 깨지면 안 되는 규칙)
 - INV1: 데이터 = 단일 HTML. 외부 DB 없음. 이식성·오프라인성 최우선.

@@ -16,3 +16,10 @@ conversations.jsonl
 server.log
 *.local
 .env
+
+# Local AI tooling state (never publish)
+.omc/
+.claude/
+.mcp.json
+NOTES.local.md
+*.local.md

@@ -3,7 +3,7 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-06-05
+last_updated: 2026-06-09
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
@@ -12,6 +12,11 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
 ## 2026-06-09
+- `[STRUCTURE]` **아카이브 익명 동작본(참조 구현) 추가 + 루트 AI 온보딩 신설 + 문서 한/영 병기.** `reference-implementation/archive/`(`archive-server.py` BM25검색서버·`archive-intake.py`·`archive-menu.py` TUI·sample `archive.html` 9art/5cat·`archive-structure.md`·`requirements.txt`·`run-*.bat/sh`·`README.md`). 루트 `AGENTS.md`+`CLAUDE.md` 신설(새 세션 자동 온보딩=기능·룰·방향; Claude Code는 `CLAUDE.md` auto-load→`AGENTS.md` 유도). AI 협업 대시보드=**별도 전용 레포 `11pyo/ai-collab-dashboard`** 명시(이 repo 주콘텐츠=아카이브+AI협업). 신규 문서 KO+EN(`README.en.md` 추가).
+  - 영향: `reference-implementation/archive/*`(신규), `reference-implementation/README.md`(신규), `AGENTS.md`·`CLAUDE.md`·`README.en.md`(신규), `README.md`("도구소스 미포함" 단서→"블루프린트+실행 구현 둘 다"로 정정·트리·대시보드 별도레포 명시), `00-INDEX.*`(ARTIFACT MAP에 archive 동작본·루트 온보딩 추가·version bump), `CHANGELOG.*`
+  - 검증: 샘플 `archive.html` 9아티클 파싱·BM25 1순위 적중(매출취소→`proc-sales-cancel`/여신→`ts-credit-check`/결산→`month-end-closing`). 기계식 데니리스트 0건(허구 ZTSD0xx 샘플만 잔존, SAP 표준 명명규칙).
+  - 이유: 사용자 지시 — 제3의뇌(아카이브)는 **기존 repo에 통합**(새 repo 금지), 새 AI 세션 자동 온보딩, 대시보드는 별도 레포 유지하되 표기, 문서 한/영.
+
 - `[STRUCTURE]` **대시보드 익명 동작본(참조 구현) 추가** — `reference-implementation/dashboard/`(`task-board.html`·`inquiry-log.js`·`log-inquiry.py`·`tasks.md`·`README.md`). 블루프린트 최초의 실행 가능 산출물(기존=문서만). 프로그램 골격(CSS+렌더JS)은 사내 `task-board.html`에서 verbatim 추출, 데이터는 가상 샘플로 교체(빌드 스크립트 조립, 조립물 금지어 assert 가드).
   - 영향: `reference-implementation/dashboard/*`(신규), `README.md`(트리·"도구 소스 미포함" 단서에 대시보드 예외 명시), `00-INDEX.*`(agent routing·version 1.5→1.6), `07-*`(상단 동작본 포인터), `CHANGELOG.*`
   - 검증: 헤드리스 렌더(preview)로 3보드·4상태·3주기·id-병합 정상·console 0 error. 다관점 적대 감사(critical/warning 0)+데니리스트 0.

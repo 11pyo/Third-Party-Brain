@@ -21,7 +21,8 @@
 | 07 | 대시보드 운영 가이드 — 규칙 & 사용법 | `07-dashboard-operating-guide.human.md` |
 | — | 변경 이력 (수정 로그) | `CHANGELOG.human.md` |
 
-> ⭐ **실행 예제**: `reference-implementation/dashboard/` — 07 챕터 대시보드를 **더블클릭하면 바로 도는** 익명 동작본(모든 데이터는 가상 샘플).
+> ⭐ **실행 예제** (`reference-implementation/`, 모든 데이터 가상 샘플): `archive/` — 제3의뇌 아카이브 엔진(BM25 검색서버·인테이크·TUI + 샘플 `archive.html`) · `dashboard/` — 07 챕터 대시보드(더블클릭 실행). 대시보드는 **별도 전용 레포 `11pyo/ai-collab-dashboard`** 로도 존재.
+> 🤖 **새 AI 세션**은 루트 `AGENTS.md`(+ Claude Code가 자동 로드하는 `CLAUDE.md`)부터 읽으면 기능·룰·방향이 바로 온보딩됩니다.
 
 ## ⛔ 꼭 지켜야 할 규칙 — 변경 시 동기화
 

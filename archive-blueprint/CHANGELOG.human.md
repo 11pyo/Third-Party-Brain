@@ -11,6 +11,14 @@
 
 ## 2026-06-09
 
+- **`[구조]` 아카이브 '익명 동작본'(참조 구현) 추가 + 새 AI 세션 자동 온보딩 정비.**
+  - 이제 **아카이브 엔진도 실행 가능한 익명 동작본**을 `reference-implementation/archive/`에 추가: `archive-server.py`(BM25 검색서버)·`archive-intake.py`(인테이크)·`archive-menu.py`(TUI)·샘플 `archive.html`(9아티클/5카테고리)·`archive-structure.md`·`requirements.txt`·실행 배치. 데이터는 전부 가상 샘플.
+  - **루트 `AGENTS.md`·`CLAUDE.md` 신설** — 새 대화 세션이 이 파일만 보면 기능·룰·방향을 즉시 온보딩(Claude Code는 `CLAUDE.md` 자동 로드 → `AGENTS.md`로 유도).
+  - **AI 협업 대시보드가 별도 전용 레포(`11pyo/ai-collab-dashboard`)로도 존재**함을 `README`·`reference-implementation/README`에 명시. 이 저장소의 주 콘텐츠는 **아카이브 + AI 협업**으로 표기.
+  - **신규 문서 한/영 병기** — `README.en.md` 추가, AGENTS/CLAUDE/구현 README 모두 KO+EN.
+  - 검증: 샘플 아카이브 9아티클 파싱·BM25 1순위 적중(매출취소→proc-sales-cancel 등) 확인. 정제 게이트(기계식 데니리스트) 통과 — 실 회사데이터 0건.
+  - 왜: 사용자 지시 — 제3의뇌(아카이브)는 **기존 이 레포에 통합**(새 레포 만들지 않음), 새 AI 세션이 자동 온보딩하도록.
+
 - **`[구조]` 대시보드 '익명 동작본'(참조 구현) 추가 — `reference-implementation/dashboard/`.**
   - 그동안 블루프린트는 방법론 문서만 공개(도구 소스 미포함)했는데, **운영 대시보드만은 더블클릭하면 바로 도는 익명 동작본**을 함께 올림: `task-board.html`(칸반 3보드)·`inquiry-log.js`(샘플 문의)·`log-inquiry.py`(헬퍼)·`tasks.md`(샘플 정본)·`README`. 프로그램(CSS·렌더JS)은 실제 사내 대시보드에서 그대로 추출하고, **데이터는 전부 가상 샘플**로 교체.
   - 검증: 헤드리스 렌더로 3보드(정기 주/월/연·일회성 4상태·문의 4상태) 정상 표시·id-병합 동작 확인(콘솔 에러 0). 공개 전 다관점 적대 감사+기계식 데니리스트로 회사정보 0건 확인.

@@ -31,13 +31,17 @@
 
 ## 이 저장소에 들어있는 것
 
-이 저장소는 기본적으로 **방법론 문서(블루프린트)**입니다. 핵심 도구(검색서버·인테이크) 소스는 포함하지 않고,
-아래 문서의 설계·알고리즘·플레이북을 따라 **직접 재현**하도록 구성돼 있습니다.
-단, **운영 대시보드만은 더블클릭하면 바로 도는 익명 동작본**(`reference-implementation/dashboard/`)을 함께 제공합니다 — 데이터는 전부 가상 샘플입니다.
+이 저장소는 **방법론 문서(블루프린트)** + **실행 가능한 익명 레퍼런스 구현**으로 구성됩니다.
+**주 콘텐츠는 「지식 아카이브 + AI 협업」**입니다. `archive-blueprint/`의 설계·알고리즘·플레이북을 따라 직접 재현해도 되고, `reference-implementation/`의 동작본을 바로 돌려봐도 됩니다 — 데이터는 전부 가상 샘플입니다.
+- **아카이브 엔진** (`reference-implementation/archive/`): BM25 검색서버 · 인테이크 · TUI + 샘플 `archive.html`.
+- **AI 협업 대시보드** (`reference-implementation/dashboard/`): 동시기록 안전(추가전용 + id-병합) 칸반·문의보드. ※ **별도 전용 레포로도 존재** → https://github.com/11pyo/ai-collab-dashboard
+
+> 🌐 **English:** This repo = a methodology **blueprint** + runnable **anonymized reference implementations**. Primary content is the **knowledge archive + AI collaboration**. The dashboard is mirrored here under `reference-implementation/dashboard/` but **also has its own standalone repo** (link above). All data is fictional sample data. Full English onboarding: [`AGENTS.md`](./AGENTS.md) and [`README.en.md`](./README.en.md).
 
 ```
 Third-Party-Brain/
-├─ README.md                ← (지금 이 파일) 시작점
+├─ README.md / README.en.md  ← 시작점 (KO / EN) · entry point
+├─ AGENTS.md / CLAUDE.md      ← ⭐ AI 자동 온보딩 (기능·룰·방향) · agent auto-onboarding
 ├─ archive-blueprint/
 │  ├─ 00-INDEX.*            진입점 · 아티팩트 맵 · 불변식(INV) · ⛔동기화 지침
 │  ├─ 01-overview-architecture.*   개요 · 아키텍처 · 기술스택
@@ -48,8 +52,9 @@ Third-Party-Brain/
 │  ├─ 06-automation-and-ops-model.*  자동화·읽기전용 운영 안전모델·공개수준 계층
 │  ├─ 07-dashboard-operating-guide.*  대시보드 운영 규칙 & 사용법(문의로그 CLI·추가전용 id-병합)
 │  └─ CHANGELOG.*                  프로그램·구조 변경 이력
-└─ reference-implementation/
-   └─ dashboard/            ⭐ 실행 가능한 익명 동작본 — 07 챕터 대시보드(더블클릭 실행, 가상 샘플)
+└─ reference-implementation/    ⭐ 실행 가능한 익명 동작본 (가상 샘플)
+   ├─ archive/                ⭐ 제3의뇌 아카이브 엔진 — BM25 검색서버·인테이크·TUI + 샘플 archive.html
+   └─ dashboard/              AI 협업 대시보드 (07 챕터) — 별도 전용 레포: 11pyo/ai-collab-dashboard
 ```
 
 ### 문서는 2벌씩 (AI용 + 사람용)
@@ -79,7 +84,7 @@ cd Third-Party-Brain
    - 6단계: 운영 규율 인계
 4. **AI에게 맡기려면** — 클론 폴더에서 AI에게 "이 `archive-blueprint` 보고 ○○ 아카이브 만들어줘"라고 하면, `04-*.ai.md`의 트리거에 따라 절차대로 진행합니다.
 
-> ⚙️ **도구 소스는 미포함(방법론 문서만 공개)**. `01`·`03`·`04`의 .ai.md에 검색 파이프라인·동의어맵·인테이크 판정·불변식이 **코드 수준으로 기술**돼 있어, 사람이든 AI든 이를 바탕으로 도구를 재작성할 수 있습니다. (예외: 운영 대시보드는 `reference-implementation/dashboard/`에 실행 가능한 익명 동작본을 포함합니다.)
+> ⚙️ **블루프린트(방법론) + 실행 레퍼런스 구현 둘 다 공개**. `01`·`03`·`04`의 .ai.md에 검색 파이프라인·동의어맵·인테이크 판정·불변식이 **코드 수준으로 기술**돼 있고, `reference-implementation/`에 **아카이브 엔진과 대시보드의 실행 가능한 익명 동작본**(가상 샘플)을 함께 제공합니다. 새 AI 세션은 루트 [`AGENTS.md`](./AGENTS.md)부터 읽으면 기능·룰·방향이 바로 온보딩됩니다.
 
 ---
 

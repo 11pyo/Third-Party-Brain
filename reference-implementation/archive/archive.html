@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Org — Knowledge Archive (Sample)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 14px; background: #f0f2f7; color: #2c3e50; }
+#header { background: #1a2744; color: white; padding: 14px 24px; position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+#header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+#header .subtitle { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+#demo-banner { background: #fef3c7; color: #92400e; font-size: 12px; padding: 7px 24px; border-bottom: 1px solid #fcd34d; }
+#search-bar { padding: 8px 24px; background: #fff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 52px; z-index: 199; display: flex; align-items: center; gap: 12px; }
+#search-input { width: 360px; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: inherit; outline: none; }
+#search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #dbeafe; }
+#search-count { font-size: 12px; color: #94a3b8; }
+#layout { display: flex; min-height: calc(100vh - 116px); }
+#sidebar { width: 250px; min-width: 250px; background: #fff; border-right: 1px solid #e2e8f0; overflow-y: auto; position: sticky; top: 116px; height: calc(100vh - 116px); }
+.nav-cat-title { padding: 10px 14px 6px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #f1f5f9; }
+.nav-link { display: block; padding: 7px 14px 7px 20px; color: #374151; text-decoration: none; font-size: 12px; border-left: 3px solid transparent; transition: all 0.12s; line-height: 1.4; }
+.nav-link:hover { background: #f0f9ff; border-left-color: #3b82f6; color: #1d4ed8; }
+.nav-link .nd { font-size: 10px; color: #cbd5e1; display: block; margin-top: 1px; }
+#content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.cat-header { display: flex; align-items: center; gap: 10px; margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 2px solid #1a2744; }
+.cat-header:first-child { margin-top: 0; }
+.cat-header h2 { font-size: 15px; font-weight: 700; color: #1a2744; }
+.cat-header .cnt { background: #1a2744; color: white; border-radius: 20px; padding: 1px 9px; font-size: 11px; }
+.article { background: #fff; border-radius: 10px; padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border: 1px solid #e2e8f0; }
+.ah { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.at { font-size: 17px; font-weight: 700; color: #1e293b; flex: 1; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.b-기초 { background: #dbeafe; color: #1d4ed8; }
+.b-프로세스 { background: #d1fae5; color: #065f46; }
+.b-기술 { background: #fef3c7; color: #92400e; }
+.b-트러블 { background: #fee2e2; color: #991b1b; }
+.b-매뉴얼 { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+.db { font-size: 11px; color: #94a3b8; padding-top: 4px; }
+.tags { margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { display: inline-block; padding: 2px 8px; background: #f1f5f9; color: #475569; border-radius: 4px; font-size: 11px; border: 1px solid #e2e8f0; }
+.sec { margin-bottom: 18px; }
+.st { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #f1f5f9; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tbl th { background: #1a2744; color: white; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11.5px; }
+.tbl td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; line-height: 1.5; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:nth-child(even) td { background: #f8fafc; }
+.tc-z { font-family: 'Consolas', monospace; font-weight: 700; color: #7c3aed; }
+.tc { font-family: 'Consolas', monospace; font-weight: 700; color: #1d4ed8; }
+.dt { line-height: 1.75; color: #374151; font-size: 13px; }
+.dt p { margin-bottom: 11px; }
+.dt strong { color: #1e293b; }
+.flow-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding: 12px 14px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+.fb { padding: 5px 10px; border-radius: 5px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.fb-cur  { background: #1d4ed8; color: white; }
+.fb-next { background: #475569; color: white; }
+.fa { color: #94a3b8; font-size: 13px; padding: 0 1px; }
+.hl-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 7px; padding: 11px 13px; margin-bottom: 10px; font-size: 13px; }
+.warn-box { background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #ea580c; border-radius: 7px; padding: 11px 13px; margin: 10px 0; font-size: 13px; color: #9a3412; }
+.article.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>Demo Org — Knowledge Archive</h1>
+    <div class="subtitle">Sample data · single-file indexable archive · AI-searchable</div>
+  </div>
+</div>
+
+<div id="demo-banner">
+  ⚠️ <b>Sample / demo content.</b> Every company name, T-Code, table, and example below is fictional and exists only to demonstrate the search/intake engine. Replace with your own knowledge base.
+</div>
+
+<div id="search-bar">
+  <input id="search-input" type="text" placeholder="🔍  Search T-Code / term / order type…" oninput="doSearch()" />
+  <span id="search-count"></span>
+</div>
+
+<div id="layout">
+<nav id="sidebar">
+  <div class="nav-cat-title">📘 기초용어 (Basics)</div>
+  <a class="nav-link" href="#order-type-io">오더 / 내부오더(IO) 유형<span class="nd">2026-01-10</span></a>
+  <a class="nav-link" href="#tcode-master">커스텀 T-Code 마스터<span class="nd">2026-01-10</span></a>
+  <a class="nav-link" href="#ztsd-tables">ZTSD 테이블 참조<span class="nd">2026-01-12</span></a>
+
+  <div class="nav-cat-title">🔄 프로세스 (Process)</div>
+  <a class="nav-link" href="#base-order-flow">표준 판매오더 처리 흐름<span class="nd">2026-01-12</span></a>
+  <a class="nav-link" href="#proc-sales-cancel">매출 취소 프로세스<span class="nd">2026-01-15</span></a>
+
+  <div class="nav-cat-title">⚙️ 기술설정 (Tech)</div>
+  <a class="nav-link" href="#month-end-closing">월말 결산 프로세스<span class="nd">2026-01-15</span></a>
+
+  <div class="nav-cat-title">🔧 트러블슈팅 (Troubleshooting)</div>
+  <a class="nav-link" href="#ts-tax-invoice">세금계산서 수정·재발행<span class="nd">2026-01-18</span></a>
+  <a class="nav-link" href="#ts-credit-check">여신 점검 / 매출환산가치<span class="nd">2026-01-18</span></a>
+
+  <div class="nav-cat-title">📒 운영참조매뉴얼 (Manual)</div>
+  <a class="nav-link" href="#ops-system-env">시스템 환경 & 연계 개요<span class="nd">2026-01-20</span></a>
+</nav>
+
+<main id="content">
+
+<!-- ══════════════ 기초용어 ══════════════ -->
+<div class="cat-header"><h2>📘 기초용어 (Basics)</h2><span class="cnt">3</span></div>
+
+<article class="article" id="order-type-io" data-tags="오더 내부오더 IO 유형 단품 서비스 비용집계 진행매출 sample 기초용어">
+  <div class="ah">
+    <div class="at">오더 / 내부오더(IO) 유형</div>
+    <span class="badge b-기초">기초용어</span>
+    <span class="db">2026-01-10</span>
+  </div>
+  <div class="tags"><span class="tag">IO</span><span class="tag">내부오더</span><span class="tag">유형</span><span class="tag">sample</span></div>
+  <div class="sec">
+    <div class="st">개요</div>
+    <div class="dt"><p>내부오더(IO)는 비용을 모으는 그릇입니다. 아래는 <strong>예시(가공)</strong> 유형 코드입니다.</p></div>
+    <table class="tbl">
+      <tr><th>IO 유형</th><th>이름</th><th>용도</th></tr>
+      <tr><td><span class="tc-z">IO10</span></td><td>단품 판매</td><td>상품 단순 매출 집계</td></tr>
+      <tr><td><span class="tc-z">IO20</span></td><td>서비스/유지보수</td><td>서비스 계약 매출·원가 집계</td></tr>
+      <tr><td><span class="tc-z">IO30</span></td><td>진행매출(프로젝트)</td><td>장기 프로젝트 진행기준 매출 인식</td></tr>
+      <tr><td><span class="tc-z">IO90</span></td><td>건설중자산(AUC)</td><td>자본화 대상 비용 집계</td></tr>
+    </table>
+  </div>
+</article>
+
+<article class="article" id="tcode-master" data-tags="커스텀 T-Code 마스터 ZSD ZMM ZCO 판매오더 세금계산서 매출취소 결산 sample 기초용어">
+  <div class="ah">
+    <div class="at">커스텀 T-Code 마스터</div>
+    <span class="badge b-기초">기초용어</span>
+    <span class="db">2026-01-10</span>
+  </div>
+  <div class="tags"><span class="tag">ZSD010</span><span class="tag">ZSD030</span><span class="tag">ZSD070</span><span class="tag">ZSD143</span><span class="tag">sample</span></div>
+  <div class="sec">
+    <div class="st">대표 커스텀 T-Code (예시·가공)</div>
+    <table class="tbl">
+      <tr><th>T-Code</th><th>화면명</th><th>설명</th></tr>
+      <tr><td><span class="tc-z">ZSD010</span></td><td>전자세금계산서 발행</td><td>매출 건의 세금계산서 생성·발행</td></tr>
+      <tr><td><span class="tc-z">ZSD025</span></td><td>출고/납품 처리</td><td>판매오더 기준 출고 전기</td></tr>
+      <tr><td><span class="tc-z">ZSD030</span></td><td>매출 취소 처리</td><td>빌링/세금계산서 취소 요청</td></tr>
+      <tr><td><span class="tc-z">ZSD070</span></td><td>월별 정기 매출 생성</td><td>월초 정기 빌링 일괄 생성</td></tr>
+      <tr><td><span class="tc-z">ZSD077</span></td><td>판매단가 조회</td><td>라인 단위 단가(NETPR) 표시</td></tr>
+      <tr><td><span class="tc-z">ZSD143</span></td><td>월말 결산 보조</td><td>미인식 매출/마감 점검</td></tr>
+      <tr><td><span class="tc">FD32</span></td><td>고객 여신 데이터 변경</td><td>표준 SAP 여신 관리</td></tr>
+      <tr><td><span class="tc">VF11</span></td><td>빌링 취소</td><td>표준 SAP 빌링 취소</td></tr>
+      <tr><td><span class="tc">VL09</span></td><td>출고 취소</td><td>표준 SAP 납품(출고) 취소</td></tr>
+    </table>
+  </div>
+</article>
+
+<article class="article" id="ztsd-tables" data-tags="ZTSD 테이블 커스텀 데이터사전 단가 여신 sample 기초용어 ZTSD010 ZTSD071 ZTSD075">
+  <div class="ah">
+    <div class="at">ZTSD 테이블 참조</div>
+    <span class="badge b-기초">기초용어</span>
+    <span class="db">2026-01-12</span>
+  </div>
+  <div class="tags"><span class="tag">ZTSD010</span><span class="tag">ZTSD071</span><span class="tag">테이블</span><span class="tag">sample</span></div>
+  <div class="sec">
+    <div class="st">커스텀 테이블 (예시·가공)</div>
+    <table class="tbl">
+      <tr><th>테이블</th><th>설명</th><th>주요 필드</th></tr>
+      <tr><td><span class="tc-z">ZTSD010</span></td><td>판매단가 마스터</td><td>MATNR, NETPR, 유효기간</td></tr>
+      <tr><td><span class="tc-z">ZTSD071</span></td><td>여신 한도/담보</td><td>KUNNR, 한도금액, 노출액</td></tr>
+      <tr><td><span class="tc-z">ZTSD075</span></td><td>출고 상태 로그</td><td>VBELN, 출고일, 상태</td></tr>
+    </table>
+  </div>
+</article>
+
+<!-- ══════════════ 프로세스 ══════════════ -->
+<div class="cat-header"><h2>🔄 프로세스 (Process)</h2><span class="cnt">2</span></div>
+
+<article class="article" id="base-order-flow" data-tags="판매오더 처리 흐름 출고 빌링 세금계산서 프로세스 sample ZSD025 ZSD010">
+  <div class="ah">
+    <div class="at">표준 판매오더 처리 흐름</div>
+    <span class="badge b-프로세스">프로세스</span>
+    <span class="db">2026-01-12</span>
+  </div>
+  <div class="tags"><span class="tag">판매오더</span><span class="tag">출고</span><span class="tag">빌링</span><span class="tag">흐름</span></div>
+  <div class="sec">
+    <div class="st">처리 순서</div>
+    <div class="flow-bar">
+      <span class="fb fb-cur">판매오더 생성</span><span class="fa">→</span>
+      <span class="fb fb-next">출고 (ZSD025/VL09)</span><span class="fa">→</span>
+      <span class="fb fb-next">빌링</span><span class="fa">→</span>
+      <span class="fb fb-next">세금계산서 (ZSD010)</span>
+    </div>
+    <div class="dt"><p>(예시) 표준 O2C 흐름: 오더 → 출고 → 빌링 → 세금계산서 발행. 단계마다 전표가 후속 전표로 연결됩니다.</p></div>
+  </div>
+</article>
+
+<article class="article" id="proc-sales-cancel" data-tags="매출 취소 프로세스 빌링취소 세금계산서 ZSD030 VF11 VL09 순서 프로세스 sample">
+  <div class="ah">
+    <div class="at">매출 취소 프로세스</div>
+    <span class="badge b-프로세스">프로세스</span>
+    <span class="db">2026-01-15</span>
+  </div>
+  <div class="tags"><span class="tag">매출취소</span><span class="tag">ZSD030</span><span class="tag">VF11</span><span class="tag">VL09</span></div>
+  <div class="sec">
+    <div class="st">취소 순서 (역순 주의)</div>
+    <div class="warn-box">취소는 생성의 <strong>역순</strong>입니다. 세금계산서 → 빌링(VF11) → 출고(VL09) → 오더. 회계(빌링)를 <strong>먼저</strong> 취소한 뒤 재고(출고)를 취소합니다.</div>
+    <div class="dt"><p>(예시) <span class="tc-z">ZSD030</span> 매출 취소 처리로 취소 요청을 등록하면 후속 취소 전표가 연계 생성됩니다. 세금계산서가 이미 발행된 경우 수정/마이너스 계산서 절차를 따릅니다.</p></div>
+  </div>
+</article>
+
+<!-- ══════════════ 기술설정 ══════════════ -->
+<div class="cat-header"><h2>⚙️ 기술설정 (Tech)</h2><span class="cnt">1</span></div>
+
+<article class="article" id="month-end-closing" data-tags="월말 결산 프로세스 마감 정기 ZSD143 기술설정 sample 월초 월별">
+  <div class="ah">
+    <div class="at">월말 결산 프로세스</div>
+    <span class="badge b-기술">기술설정</span>
+    <span class="db">2026-01-15</span>
+  </div>
+  <div class="tags"><span class="tag">결산</span><span class="tag">월말</span><span class="tag">ZSD143</span><span class="tag">마감</span></div>
+  <div class="sec">
+    <div class="st">결산 체크리스트 (예시)</div>
+    <div class="dt">
+      <p><strong>D+1</strong>: 미인식 매출 점검 (<span class="tc-z">ZSD143</span>) · 출고 미빌링 잔량 확인</p>
+      <p><strong>D+2</strong>: 전기기간 마감 · 차이 분석 · 보고</p>
+    </div>
+    <div class="hl-box">월초 정기 매출 생성(<span class="tc-z">ZSD070</span>)과 월말 결산(<span class="tc-z">ZSD143</span>)은 한 쌍으로 운영합니다.</div>
+  </div>
+</article>
+
+<!-- ══════════════ 트러블슈팅 ══════════════ -->
+<div class="cat-header"><h2>🔧 트러블슈팅 (Troubleshooting)</h2><span class="cnt">2</span></div>
+
+<article class="article" id="ts-tax-invoice" data-tags="세금계산서 수정 재발행 오류 마이너스 정정 ZSD010 트러블슈팅 sample">
+  <div class="ah">
+    <div class="at">세금계산서 수정·재발행</div>
+    <span class="badge b-트러블">트러블슈팅</span>
+    <span class="db">2026-01-18</span>
+  </div>
+  <div class="tags"><span class="tag">세금계산서</span><span class="tag">ZSD010</span><span class="tag">정정</span><span class="tag">오류</span></div>
+  <div class="sec">
+    <div class="st">증상 → 해결 (예시)</div>
+    <div class="dt">
+      <p><strong>증상</strong>: 발행된 세금계산서 금액 오류.</p>
+      <p><strong>해결</strong>: <span class="tc-z">ZSD010</span>에서 수정코드로 마이너스(정정) 계산서를 발행해 당초분을 상쇄한 뒤, 플러스 계산서로 최종 금액을 재계상합니다. 같은 회계기간이면 결산 영향 없음.</p>
+    </div>
+  </div>
+</article>
+
+<article class="article" id="ts-credit-check" data-tags="여신 점검 매출환산가치 한도 노출액 Credit BLOCK FD32 VKM4 ZTSD071 트러블슈팅 sample">
+  <div class="ah">
+    <div class="at">여신 점검 / 매출환산가치</div>
+    <span class="badge b-트러블">트러블슈팅</span>
+    <span class="db">2026-01-18</span>
+  </div>
+  <div class="tags"><span class="tag">여신</span><span class="tag">FD32</span><span class="tag">VKM4</span><span class="tag">ZTSD071</span></div>
+  <div class="sec">
+    <div class="st">여신 블록 해제 흐름 (예시)</div>
+    <div class="dt">
+      <p>여신 초과로 오더가 블록되면: <span class="tc">FD32</span>에서 한도/노출액 확인 → <span class="tc-z">ZTSD071</span>에서 담보·한도 점검 → 승인 후 <span class="tc">VKM4</span>에서 블록 해제.</p>
+    </div>
+  </div>
+</article>
+
+<!-- ══════════════ 운영참조매뉴얼 ══════════════ -->
+<div class="cat-header"><h2>📒 운영참조매뉴얼 (Manual)</h2><span class="cnt">1</span></div>
+
+<article class="article" id="ops-system-env" data-tags="시스템 환경 연계 개요 아키텍처 인터페이스 매뉴얼 참조 가이드 sample">
+  <div class="ah">
+    <div class="at">시스템 환경 & 연계 개요</div>
+    <span class="badge b-매뉴얼">운영참조매뉴얼</span>
+    <span class="db">2026-01-20</span>
+  </div>
+  <div class="tags"><span class="tag">환경</span><span class="tag">연계</span><span class="tag">아키텍처</span><span class="tag">매뉴얼</span></div>
+  <div class="sec">
+    <div class="st">개요 (예시·가공)</div>
+    <div class="dt">
+      <p>SAP S/4HANA + 전자세금계산서 연계 + 결재 시스템 연계로 구성된 (가공) 환경 개요입니다. 실제 호스트/계정/도메인 정보는 포함하지 않습니다.</p>
+    </div>
+  </div>
+</article>
+
+</main>
+</div>
+
+<script>
+// Client-side filter — hides articles whose text/tags don't match the query.
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const arts = document.querySelectorAll('.article');
+  let shown = 0;
+  arts.forEach(a => {
+    const hay = (a.textContent + ' ' + (a.getAttribute('data-tags') || '')).toLowerCase();
+    const hit = !q || hay.includes(q);
+    a.classList.toggle('hidden', !hit);
+    if (hit) shown++;
+  });
+  const cnt = document.getElementById('search-count');
+  cnt.textContent = q ? `${shown} match${shown === 1 ? '' : 'es'}` : '';
+}
+
+// Smooth-scroll for sidebar links.
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', e => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) { e.preventDefault(); el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+  });
+});
+</script>
+
+</body>
+</html>
