@@ -1,3 +1,7 @@
+# Python 빌드 캐시
+__pycache__/
+*.pyc
+
 # OS / 편집기 잡파일
 Thumbs.db
 Desktop.ini
