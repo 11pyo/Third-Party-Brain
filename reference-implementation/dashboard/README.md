@@ -38,6 +38,30 @@ python log-inquiry.py --done --id <그-id> --a "<처리 요약>" --ref "#<관련
 - 카드의 **✏️수정**은 이 브라우저(localStorage)에만 저장됩니다. 정본 `tasks.md`에 반영하려면 편집바의 **「변경분 내보내기(JSON)」**로 뽑아 옮깁니다.
 - 완료 열은 높이 고정+스크롤이고, 열 머리의 **`⤢ 전체보기`**로 완료 카드를 큰 모달에서 모아 봅니다.
 
+## 카드 폼 구조 (수정 전 필독) · Card form structure (read before editing)
+
+**KO** — 두 종류의 카드 모두 **"헤더(요약) + 클릭하면 펼쳐지는 상세"** 패턴입니다.
+
+- **① 프로젝트 카드 `.card`** — `viewHTML()`로 렌더. 헤더: ID·제목·기한 + 노란 `.next`(다음 액션 요약). 클릭 → `.detail` 펼침(`.open` 토글).
+- **② 문의 카드 `.inq-card`** — `inqCard()`로 렌더. 헤더 `.inq-head`(항상 보임=클릭 영역): ▸캐럿 + INQ코드 + 요청자 칩 + 유형 배지(단순/일반/긴급) + 노란 `.inq-sum`(질문). `.inq-detail`(접힘): 처리/답변 + 참조링크 + 날짜·기록자. 헤더 클릭 시 펼침. 토글은 `#inqboard`에 **이벤트 위임**(재렌더에도 유지), 완료열 「⤢ 전체보기」 모달에선 자동 펼침.
+
+**렌더 ≠ 데이터** (꼭 구분):
+
+| 카드 | 렌더 함수 | 데이터 출처 | 수정 방법 |
+|------|-----------|-------------|-----------|
+| 프로젝트 카드 | `viewHTML()` | JS `TASKS` 배열 | `tasks.md`와 **수기 동기화** (브라우저 편집은 localStorage만) |
+| 문의 카드 | `inqCard()` | `inquiry-log.js`의 `INQUIRY_LOG` | **`log-inquiry.py` 헬퍼로만** (직접 편집 금지) |
+
+> ⚠️ 폼 수정 시 **`.inq-sum`·`.inq-detail`·`.inq-cy` CSS와 `#inqboard` 토글 위임을 함께 유지**할 것.
+> 이건 **대시보드 UI**라 **아카이브 블루프린트 동기화 대상이 아님**(코어 아카이브의 도구·알고리즘·구조 변경이 아니므로).
+
+**EN** — Both card types now follow a **"header (summary) + click-to-expand detail"** pattern.
+
+- **Project card `.card`** (rendered by `viewHTML()`): header = ID · title · due + yellow `.next` (next-action summary); click → `.detail` expands (`.open` toggle).
+- **Inquiry card `.inq-card`** (rendered by `inqCard()`): header `.inq-head` (always visible = click target) = ▸caret + INQ code + requester chip + type badge (simple/normal/urgent) + yellow `.inq-sum` (the question). `.inq-detail` (collapsed) = resolution/answer + ref link + date/recorder; click the header to expand. Toggle uses **event delegation on `#inqboard`** (survives re-render); auto-expanded inside the done-column "⤢ view all" modal.
+- **Render ≠ data:** project card ← `TASKS` array (sync with `tasks.md` by hand; browser edits are localStorage-only); inquiry card ← `INQUIRY_LOG` in `inquiry-log.js` (append **only** via `log-inquiry.py`, never hand-edit).
+- ⚠️ When changing the form, keep the `.inq-sum` / `.inq-detail` / `.inq-cy` CSS and the `#inqboard` toggle delegation **together**. This is **dashboard UI → NOT subject to archive-blueprint sync**.
+
 ## 자기 도메인에 맞추기
 1. `tasks.md` + `task-board.html`의 `const TASKS` 배열을 본인 업무 카드로 교체(둘 다 동기화).
 2. `inquiry-log.js`의 샘플 push를 지우고, 실제 문의는 `log-inquiry.py`로만 덧붙임.
