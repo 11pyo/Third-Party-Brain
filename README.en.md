@@ -1,9 +1,10 @@
 # Third-Party-Brain
 
-> **A blueprint (methodology) — plus runnable reference implementations — for building, running,
-> and replicating an AI-indexable operational knowledge archive ("a third brain"), from scratch.**
+**🌐 Language: [한국어](./README.md) · English (this page)** · 🤖 [AGENTS.md](./AGENTS.md) · 💬 [Discussions](https://github.com/11pyo/Third-Party-Brain/discussions)
 
-**🌐 Language: [한국어](./README.md) · English (this page)** · 🤖 AI onboarding: [`AGENTS.md`](./AGENTS.md)
+> **A blueprint (methodology) — plus runnable reference implementations — for building, running,
+> and replicating an AI-indexable operational knowledge archive ("a *third brain*" — beyond memory and
+> notes, it's notes your AI can read and reason over), from scratch.**
 
 > 🌍 **Domain-agnostic — not SAP-specific.** The worked example happens to be SAP SD operations, so
 > you'll see some SAP terms (T-Codes, etc.) in the samples — but **the pattern works for any team,
