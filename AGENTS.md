@@ -79,3 +79,7 @@ Third-Party-Brain/
 - **Open the dashboard** — open `reference-implementation/dashboard/task-board.html` in a browser.
 - **Log an inquiry** — `python reference-implementation/dashboard/log-inquiry.py --new --type simple --q "..." --by you`.
 - **Build a brand-new archive for another domain** — follow `archive-blueprint/04-replication-playbook.ai.md`.
+  **Run its STEP 0 interview first** — ask the user for: domain · categories(+signals) · id scheme ·
+  **sensitive / do-not-store list** · code notation · synonyms · and the **real content** to fill it.
+  Never fabricate domain knowledge. · 새 아카이브는 **STEP 0 인터뷰부터**: 도메인·카테고리·민감정보
+  금지목록·코드표기·동의어·**실제 콘텐츠**를 사용자에게 묻고 시작(도메인 지식 임의 생성 금지).
