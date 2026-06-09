@@ -12,6 +12,10 @@
 - `archive-blueprint/07-dashboard-operating-guide.human.md` (규칙 R1~R8·사용법)
 - `archive-blueprint/05-operational-layer.human.md` (왜 이런 레이어인가)
 
+## 영감 — 토요타 칸반 · Inspiration — Toyota Kanban
+**KO** — 보드 형태(작업을 카드로 만들어 상태 컬럼 사이로 흘려보냄)는 **토요타 생산방식(TPS)의 칸반(看板)** JIT 신호에서 유래해 Lean·Agile의 칸반 방식으로 이어진 계보를 따릅니다. 즉 *작업 흐름 시각화*는 토요타 칸반에서 영감. 단, **추가전용+id병합 동시기록 안전·무백엔드**는 토요타가 아니라 **이벤트 소싱/로그 구조** 계열의 별개 아이디어입니다.
+**EN** — The board form (cards flowing across status columns) descends from the **Toyota Production System's kanban (看板)** JIT signaling, via the Lean/Agile Kanban method — so the *work-flow visualization* is inspired by Toyota. The **append-only + id-merge, backend-less concurrency safety** is a separate, event-sourcing-style idea (not from Toyota).
+
 ## 구성 파일
 
 | 파일 | 역할 |
