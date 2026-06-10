@@ -39,7 +39,7 @@ python log-inquiry.py --done --id <그-id> --a "<처리 요약>" --ref "#<관련
 # 3) 브라우저 새로고침 = 반영
 ```
 
-- 카드의 **✏️수정**은 이 브라우저(localStorage)에만 저장됩니다. 정본 `tasks.md`에 반영하려면 편집바의 **「변경분 내보내기(JSON)」**로 뽑아 옮깁니다.
+- 카드를 **✏️수정**한 뒤 편집바의 **💾 파일에 저장**을 누르면 **서버·클로드 없이 파일(`task-board.html`)에 바로 기록**됩니다 (Chrome·Edge는 File System Access API로 즉시 저장 / 그 외 브라우저는 다운로드). 「변경분 내보내기(JSON)」는 `tasks.md`를 클로드로 동기화하던 옛 방식입니다. · **EN:** edit a card, then **💾 Save to file** writes it straight back to `task-board.html` (no server, no Claude); the JSON export is the old Claude-sync path.
 - 완료 열은 높이 고정+스크롤이고, 열 머리의 **`⤢ 전체보기`**로 완료 카드를 큰 모달에서 모아 봅니다.
 
 ## 카드 폼 구조 (수정 전 필독) · Card form structure (read before editing)

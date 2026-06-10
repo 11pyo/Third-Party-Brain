@@ -400,11 +400,13 @@ function openEdit(card, t){
 function renderBar(){
   const n = Object.keys(overrides).length;
   editbar.innerHTML =
-    `<span>✏️ 카드 <b>수정</b>→이 브라우저 저장 · 변경 <b>${n}건</b></span>` +
+    `<span>✏️ 카드 <b>수정</b>→저장 · 변경 <b>${n}건</b></span>` +
+    `<button id="savef" style="background:#16a34a;color:#fff;font-weight:700">💾 파일에 저장 (클로드 불필요)</button>` +
     `<button id="exp"${n?'':' disabled'}>📤 변경분 내보내기(JSON)</button>` +
     `<button id="rst"${n?'':' disabled'}>전체 초기화</button>` +
-    (n ? `<span class="warn-txt">※ 정본 tasks.md엔 자동 반영 안 됨 — 내보내서 동기화(저에게 붙여주면 반영)</span>`
-       : `<span style="color:#b08968;">(수정하면 여기 버튼이 활성화됩니다)</span>`);
+    (n ? `<span class="warn-txt">💾 <b>파일에 저장</b>하면 정본에 바로 기록(서버·클로드 불필요). 내보내기(JSON)는 정본을 클로드로 동기화하던 옛 방식.</span>`
+       : `<span style="color:#b08968;">(카드를 수정하면 변경분 버튼이 켜집니다 — 💾 저장은 언제든 가능)</span>`);
+  editbar.querySelector('#savef').onclick = saveToFile;
   if (n){
     editbar.querySelector('#exp').onclick = exportJSON;
     editbar.querySelector('#rst').onclick = () => {
@@ -437,6 +439,35 @@ function exportJSON(){
   const close = () => ovl.remove();
   ovl.querySelector('#cls').onclick = close;
   ovl.addEventListener('click', (e) => { if (e.target === ovl) close(); });
+}
+
+// ── 💾 파일에 직접 저장 (서버·클로드 불필요) ──
+// 현재 편집(overrides)을 TASKS에 반영해 파일 전체를 다시 쓴다. Chrome·Edge는 File System
+// Access API로 원본에 바로 기록, 그 외 브라우저는 수정본 다운로드(원본에 덮어쓰기).
+async function saveToFile(){
+  const merged = mergedTasks();
+  TASKS.length = 0; merged.forEach(t => TASKS.push(t));   // 편집분을 정본 배열에 베이크
+  overrides = {}; saveOverrides();
+  const literal = 'const TASKS = ' + JSON.stringify(TASKS, null, 2) + ';';
+  const doc = document.documentElement.cloneNode(true);
+  doc.querySelectorAll('[data-noexport], .ovl').forEach(el => el.remove());   // 임시 오버레이 제거
+  let html = '<!DOCTYPE html>\n' + doc.outerHTML + '\n';
+  html = html.replace(/(const TASKS = \[[\s\S]*?\n\];)(\s*\nconst COLS =)/, (m, p1, p2) => literal + p2);
+  if (window.showSaveFilePicker){
+    try {
+      if (!window._fh) window._fh = await window.showSaveFilePicker({ suggestedName:'task-board.html', types:[{description:'HTML', accept:{'text/html':['.html']}}] });
+      const w = await window._fh.createWritable(); await w.write(html); await w.close();
+      render(); _toast('파일에 저장됨 ✓ — 다음에 열어도 유지됩니다'); return;
+    } catch(err){ if (err.name === 'AbortError') return; }   // 사용자가 피커 취소
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html],{type:'text/html'})); a.download = 'task-board.html'; a.click();
+  render(); _toast('다운로드됨 — 원본 task-board.html 에 덮어쓰세요');
+}
+function _toast(msg){
+  const t = document.createElement('div'); t.setAttribute('data-noexport','');
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#16a34a;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2)';
+  t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 3000);
 }
 
 render();

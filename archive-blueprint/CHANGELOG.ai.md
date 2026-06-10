@@ -13,7 +13,7 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 
 ## 2026-06-10
 - `[STRUCTURE]` **서버 없는 인-브라우저 편집(✏️) 추가** — `reference-implementation/archive/archive.html` + (별도 레포)대시보드 `task-board.html`. 편집모드(`contenteditable` 토글 + 새 글/태스크 추가 + 🗑삭제), **저장=File System Access API로 원본 파일 write-back**(`showSaveFilePicker`, 핸들 캐시), 미지원 시 `download` 폴백. 저장 직렬화는 `[data-noexport]`(편집 UI)·`#ai-toggle/#ai-panel`(서버주입분) 제거 + `contenteditable` 속성 제거 + `.hidden` 해제, 편집 스크립트/CSS는 **보존**(저장본도 재편집 가능). 대시보드는 `outerHTML` 직렬화 후 정규식 `/const TASKS = \[[\s\S]*?\n\];/`를 모델 JSON으로 1회 교체.
-  - 영향: `reference-implementation/archive/archive.html`·`(ai-collab-dashboard)/task-board.html`(편집 CSS/UI/JS), `README.md`/`README.en.md`·`reference-implementation/archive/README.md`·`AGENTS.md`(✏️ 안내), `CHANGELOG.*`. 핵심 도구(`archive-server.py` 등) 로직은 불변.
+  - 영향: `reference-implementation/archive/archive.html`·`(ai-collab-dashboard)/task-board.html`(편집 CSS/UI/JS) + `reference-implementation/dashboard/task-board.html`(이 레포 미러 — 기존 `openEdit`/`overrides` 편집기에 **💾 파일에 저장** 버튼+`saveToFile()` 추가: `mergedTasks()` 베이크 후 `const TASKS=[…]` 리터럴 write-back / FS Access·download), `README.md`/`README.en.md`·`reference-implementation/archive/README.md`·`reference-implementation/dashboard/README.md`·`AGENTS.md`(✏️ 안내), `CHANGELOG.*`. 핵심 도구(`archive-server.py` 등) 로직은 불변. ※ 실무용(비공개) 대시보드에도 동일 `saveToFile()` 적용(미푸시).
   - 검증: preview 헤드리스 — 편집토글·add(아티클: 사이드바·카운트 갱신 / 태스크: TASKS 모델 갱신)·저장직렬화(`elementsWithContenteditableAttr=0`, TASKS 리터럴 1개로 교체, 편집본 반영, 편집 스크립트 보존) 통과, console 0 error.
   - 이유: 실사용 피드백(간단 수정을 클로드 없이) 수용. 서버리스·무의존 원칙(INV1) 유지 — `file://` 에서 동작.
 
