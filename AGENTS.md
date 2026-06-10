@@ -72,9 +72,15 @@ Third-Party-Brain/
 
 ---
 
-## 6. Common tasks · 자주 하는 작업
+## 6. When asked to "set this up" · "셋업해줘" 하면 — offer a choice, don't just run something
+**Don't assume — offer two paths:**
+- **Ⓐ See the demo** → run the shipped sample (no setup, all fictional data): `reference-implementation/archive/` (`pip install -r requirements.txt` → `python archive-server.py`, http://localhost:5174) or `reference-implementation/dashboard/task-board.html`.
+- **Ⓑ Build their own** → run the **STEP 0 interview** first (domain · categories · sensitive/do-not-store list · code notation · synonyms · the **real content** to fill it), then follow `archive-blueprint/04-replication-playbook`. Never fabricate domain knowledge.
 
-- **When asked to "set this up", offer a choice first** (don't assume): **Ⓐ explore the demo** (run the sample archive/dashboard below) or **Ⓑ build their own** — then run the STEP 0 interview (domain · categories · sensitive list · code notation · synonyms · real content). Never fabricate the user's domain knowledge. · **"셋업해줘" 하면 먼저 선택지 제시**: Ⓐ 데모 둘러보기 / Ⓑ 내 아카이브 만들기(STEP 0 인터뷰부터). 도메인 지식 임의 생성 금지.
+**먼저 선택지 제시** (지레짐작 금지): **Ⓐ 데모 보기** → 포함된 샘플 바로 실행(아카이브 `python archive-server.py` 또는 `dashboard/task-board.html`, 전부 가짜 데이터) · **Ⓑ 내 아카이브 만들기** → STEP 0 인터뷰(도메인·카테고리·민감정보 금지목록·코드표기·동의어·**실제 콘텐츠**)부터, 절차는 `04-replication-playbook`. 도메인 지식 임의 생성 금지.
+
+## 7. Common tasks · 자주 하는 작업
+
 - **Run the archive search server** — `cd reference-implementation/archive && python archive-server.py` (→ http://localhost:5174). `--share` for LAN.
 - **Check before adding a knowledge article** — `python archive-intake.py "<keywords>"` (duplicate/conflict/placement).
 - **Open the dashboard** — open `reference-implementation/dashboard/task-board.html` in a browser.
