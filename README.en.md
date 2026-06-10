@@ -10,6 +10,8 @@
 > module, company, or topic**: IT runbooks, HR procedures, a support FAQ, research notes, a team wiki.
 > *Just fill it with your own domain's terms.*
 
+> 🔗 **A pair** — this is the *memory* half (the knowledge archive); the *workflow* half is the **[AI Collaboration Dashboard](https://github.com/11pyo/ai-collab-dashboard)**.
+
 A lightweight, portable pattern for an internal knowledge archive that runs on **a few files** — no
 heavy database, no server install. It's one HTML file (data + UI + search), a few Python tools, and
 local-AI natural-language search. The origin case is an SAP SD operations archive (an example
