@@ -12,6 +12,10 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
 ## 2026-06-10
+- `[ALGO]` **💾저장 신뢰성 하드닝 — "저장했는데 새로고침하면 롤백" 차단.** 실사용 보고: 편집→💾저장→새로고침 시 편집분 소실. 조사 결과 원본 파일에 브라우저 기록 흔적 없음(쓰기가 원본에 도달 안 함 — 취소 무알림/타 위치 저장/비보안 주소 다운로드 폴백 등 어느 분기든 종전 코드는 침묵). 변경(아카이브 2종 공통): ① **저장 스탬프** — 저장본 `<html data-saved="sv-…">` + localStorage 쌍 기록, 로드 시 대조 → 불일치면 상단 경고 배너("마지막 저장이 이 파일에 반영 안 됨") + **[저장 위치 재선택]**(`_fsForget()`=IndexedDB 핸들 삭제→다음 저장 때 재선택) ② **무침묵 원칙** — AbortError(취소)도 ⚠토스트, 기타 실패는 에러명 토스트 후 다운로드 폴백 ③ **라운드트립 검증** — write 후 `getFile().size`를 기대 바이트와 대조 ④ 성공 토스트에 파일명 표시 ⑤ picker `id`+`startIn:'documents'`(위치 기억 개선) ⑥ 비보안 컨텍스트(`http://IP`)는 로드 시 💾버튼을 "💾 다운로드"로 재라벨(직접기록 API 부재 명시).
+  - 영향: 정본(비공개) `archive.html` + `reference-implementation/archive/archive.html`(localStorage 키 `archive-saved-stamp`/`tpb-archive-saved-stamp`). 대시보드들은 추후 동일 패턴 이식 가능(미적용).
+  - 검증: 헤드리스 — 스탬프 직렬화(`<html … data-saved>`), 불일치 배너 표시+버튼 2종 동작(재선택=핸들 삭제·닫기=스탬프 클리어), 스탬프 없음=배너 없음, `_fsForget` 정상, console 0 error (두 파일 모두).
+  - 이유: 저장 실패가 조용히 지나가면 사용자는 "롤백"으로 인지 — 실패·불일치를 반드시 표면화.
 - `[ALGO]` **편집 모드 perf 수정 — 일괄 contenteditable 토글 → 클릭 위임(delegation).** 종전 `toggleEdit`가 편집대상 전 요소(`_EDIT_SEL` 매칭, 정본 기준 4,787개)에 `contenteditable`을 일괄 set/remove → 토글당 헤드리스 250~360ms(실브라우저는 점선 outline 수천 개 페인트까지 추가) 렉. 변경: `toggleEdit`=body 클래스만 토글(off 시 잔여 속성 정리), **클릭한 요소만 그 순간** `contenteditable` 부여(document 클릭 위임 + `closest(_EDIT_SEL)`), `focusout`에서 회수, `caretRangeFromPoint`로 클릭 지점에 캐럿, 편집 중 본문 `<a>`는 `preventDefault`(이동 대신 편집). CSS는 `body.editing <대상>:hover` 점선 어포던스 추가(`[contenteditable="true"]` 규칙 유지). 아카이브 크기와 무관하게 O(1) — 페이지 분할 불필요 근거.
   - 영향: 정본(비공개) `archive.html` + `reference-implementation/archive/archive.html`(공개 샘플, 동일 패턴 — 복사해 큰 아카이브 만들면 같은 함정이라 함께 수정). `addArticle` 말미의 재토글 호출 제거(위임이라 불필요). 대시보드들은 편집 노드 수가 작아 미적용.
   - 검증: 헤드리스 preview(정본) — 토글 250~360ms→27~42ms(×3 반복), 클릭→해당 1개만 editable, blur 회수, off 후 잔여 0, add 정상, console 0 error. 공개 샘플 동일 통과.

@@ -417,14 +417,20 @@ function _toast(msg){
 function _fsOpen(){ return new Promise(r=>{ const q=indexedDB.open('tbfs',1); q.onupgradeneeded=()=>q.result.createObjectStore('h'); q.onsuccess=()=>r(q.result); q.onerror=()=>r(null); }); }
 async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get('f'); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
 async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,'f'); }catch(e){} }
+async function _fsForget(){ window._fh=null; try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').delete('f'); }catch(e){} }
 async function _pickFileHandle(name){
   let h = window._fh || await _fsLoad();
   if (h){ try{ const o={mode:'readwrite'}; if(await h.queryPermission(o)!=='granted' && await h.requestPermission(o)!=='granted') h=null; }catch(e){ h=null; } }
-  if (!h){ h = await window.showSaveFilePicker({ suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] }); await _fsStore(h); }
+  if (!h){ h = await window.showSaveFilePicker({ id:'tpb-archive', startIn:'documents', suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] }); await _fsStore(h); }
   window._fh = h; return h;
 }
 async function saveFile(){
+  // Save-stamp: written into the saved file's <html data-saved> AND remembered in
+  // localStorage. On next load we compare the two — a mismatch means the save landed
+  // in a DIFFERENT file than the one being viewed (the #1 "my edits rolled back" cause).
+  const stamp = 'sv-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
   const doc = document.documentElement.cloneNode(true);
+  doc.setAttribute('data-saved', stamp);
   doc.querySelectorAll('[data-noexport], #ai-toggle, #ai-panel').forEach(el=>el.remove());      // strip edit UI + (server-injected) AI panel
   doc.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   doc.querySelectorAll('.article.hidden').forEach(el=>el.classList.remove('hidden'));            // un-hide any search-filtered articles
@@ -434,13 +440,38 @@ async function saveFile(){
     try {
       const h = await _pickFileHandle('archive.html');   // 파일 위치 기억(첫 선택 후 폴더 안 찾음)
       const w = await h.createWritable(); await w.write(html); await w.close();
-      toggleEdit(false); _toast('파일에 저장됨 ✓'); return;
-    } catch(e){ if (e.name==='AbortError') return; }   // user cancelled the picker
+      const f = await h.getFile();                       // round-trip check: did the bytes land?
+      if (f.size !== new Blob([html]).size){ _toast('⚠ 저장 검증 실패 — 기록된 크기가 다릅니다. 다시 시도하세요'); return; }
+      try{ localStorage.setItem('tpb-archive-saved-stamp', stamp); }catch(_e){}
+      toggleEdit(false); _toast('파일에 저장됨 ✓ ('+h.name+')'); return;
+    } catch(e){
+      if (e.name==='AbortError'){ _toast('⚠ 저장 취소됨 — 파일에 기록되지 않았습니다'); return; }   // never fail silently
+      _toast('⚠ 직접 저장 실패('+e.name+') — 다운로드로 대체합니다');
+    }
   }
   const a = document.createElement('a');                                                          // fallback: download
   a.href = URL.createObjectURL(new Blob([html],{type:'text/html'})); a.download='archive.html'; a.click();
+  try{ localStorage.setItem('tpb-archive-saved-stamp', stamp); }catch(_e){}  // banner on next load reminds to overwrite the original
   toggleEdit(false); _toast('다운로드됨 — 원본 archive.html에 덮어쓰세요');
 }
+// On load: if our last save-stamp is NOT in this file, the save went somewhere else — warn.
+document.addEventListener('DOMContentLoaded', ()=>{
+  if (!window.showSaveFilePicker){ const b=document.getElementById('btn-save'); if(b){ b.textContent='💾 다운로드'; b.title='Direct file write needs Chrome/Edge on file:// or localhost — this address falls back to download.'; } }
+  try{
+    const want = localStorage.getItem('tpb-archive-saved-stamp');
+    if (!want || document.documentElement.getAttribute('data-saved')===want) return;
+    const d = document.createElement('div'); d.setAttribute('data-noexport','');
+    d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c2d12;color:#fff;padding:10px 16px;font-size:13px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap';
+    d.innerHTML='⚠ <b>마지막 💾저장이 이 파일에 반영되어 있지 않습니다.</b> 저장이 다른 위치의 파일로 갔거나, 다운로드본을 아직 원본에 덮어쓰지 않은 상태일 수 있어요.';
+    const btn = document.createElement('button'); btn.textContent='저장 위치 재선택';
+    btn.style.cssText='background:#fff;color:#7c2d12;border:0;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700';
+    btn.onclick = async()=>{ await _fsForget(); localStorage.removeItem('tpb-archive-saved-stamp'); d.remove(); _toast('기억한 저장 위치를 지웠습니다 — 다음 💾저장 때 파일을 다시 고르세요'); };
+    const x = document.createElement('button'); x.textContent='확인(닫기)';
+    x.style.cssText='background:transparent;color:#fff;border:1px solid #ffffff88;border-radius:6px;padding:4px 10px;cursor:pointer';
+    x.onclick = ()=>{ localStorage.removeItem('tpb-archive-saved-stamp'); d.remove(); };
+    d.append(btn,x); document.body.appendChild(d);
+  }catch(e){}
+});
 </script>
 
 <div id="edit-fab" data-noexport>
