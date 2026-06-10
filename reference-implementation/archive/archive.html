@@ -414,14 +414,23 @@ function _toast(msg){
 
 // Remember the chosen file (IndexedDB) so after the first pick it saves back to the
 // same file with no folder-hunting.
+// ⚠ The handle key is app-unique (_FS_KEY). A shared key ('f') once collided with the
+// dashboard editor in the same folder (file:// pages share one IndexedDB), so an archive
+// save silently overwrote task-board.html. Key isolation + filename validation prevent it.
+const _FS_KEY='tpb-archive';
 function _fsOpen(){ return new Promise(r=>{ const q=indexedDB.open('tbfs',1); q.onupgradeneeded=()=>q.result.createObjectStore('h'); q.onsuccess=()=>r(q.result); q.onerror=()=>r(null); }); }
-async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get('f'); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
-async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,'f'); }catch(e){} }
-async function _fsForget(){ window._fh=null; try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').delete('f'); }catch(e){} }
+async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get(_FS_KEY); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,_FS_KEY); }catch(e){} }
+async function _fsForget(){ window._fh=null; try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').delete(_FS_KEY); }catch(e){} }
 async function _pickFileHandle(name){
   let h = window._fh || await _fsLoad();
+  if (h && h.name !== name) h = null;   // stale/foreign handle (e.g. old shared key) → re-pick
   if (h){ try{ const o={mode:'readwrite'}; if(await h.queryPermission(o)!=='granted' && await h.requestPermission(o)!=='granted') h=null; }catch(e){ h=null; } }
-  if (!h){ h = await window.showSaveFilePicker({ id:'tpb-archive', startIn:'documents', suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] }); await _fsStore(h); }
+  if (!h){
+    h = await window.showSaveFilePicker({ id:_FS_KEY, startIn:'documents', suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] });
+    if (h.name !== name) _toast('⚠ 선택한 파일명이 '+name+' 이 아닙니다 — 저장 위치를 확인하세요');
+    await _fsStore(h);
+  }
   window._fh = h; return h;
 }
 async function saveFile(){

@@ -445,35 +445,72 @@ function exportJSON(){
 // 현재 편집(overrides)을 TASKS에 반영해 파일 전체를 다시 쓴다. Chrome·Edge는 File System
 // Access API로 원본에 바로 기록, 그 외 브라우저는 수정본 다운로드(원본에 덮어쓰기).
 // 파일을 한 번 고르면 그 위치를 기억(IndexedDB)해서, 다음부터는 폴더 안 찾고 바로 저장.
+// ⚠ The handle key is app-unique (_FS_KEY). A shared key ('f') once collided with the
+// archive editor in the same folder (file:// pages share one IndexedDB), so an archive
+// save silently overwrote task-board.html. Key isolation + filename validation prevent it.
+const _FS_KEY='tpb-board', _FS_NAME='task-board.html';
 function _fsOpen(){ return new Promise(r=>{ const q=indexedDB.open('tbfs',1); q.onupgradeneeded=()=>q.result.createObjectStore('h'); q.onsuccess=()=>r(q.result); q.onerror=()=>r(null); }); }
-async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get('f'); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
-async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,'f'); }catch(e){} }
+async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get(_FS_KEY); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,_FS_KEY); }catch(e){} }
+async function _fsForget(){ window._fh=null; try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').delete(_FS_KEY); }catch(e){} }
 async function _pickFileHandle(name){
   let h = window._fh || await _fsLoad();
+  if (h && h.name !== name) h = null;   // stale/foreign handle (e.g. old shared key) → re-pick
   if (h){ try{ const o={mode:'readwrite'}; if(await h.queryPermission(o)!=='granted' && await h.requestPermission(o)!=='granted') h=null; }catch(e){ h=null; } }
-  if (!h){ h = await window.showSaveFilePicker({ suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] }); await _fsStore(h); }
+  if (!h){
+    h = await window.showSaveFilePicker({ id:_FS_KEY, startIn:'documents', suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] });
+    if (h.name !== name) _toast('⚠ 선택한 파일명이 '+name+' 이 아닙니다 — 저장 위치를 확인하세요');
+    await _fsStore(h);
+  }
   window._fh = h; return h;
 }
 async function saveToFile(){
   const merged = mergedTasks();
   TASKS.length = 0; merged.forEach(t => TASKS.push(t));   // 편집분을 정본 배열에 베이크
   overrides = {}; saveOverrides();
+  // Save-stamp: lets the next load detect "my last save never landed in this file".
+  const stamp = 'sv-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
   const literal = 'const TASKS = ' + JSON.stringify(TASKS, null, 2) + ';';
   const doc = document.documentElement.cloneNode(true);
+  doc.setAttribute('data-saved', stamp);
   doc.querySelectorAll('[data-noexport], .ovl').forEach(el => el.remove());   // 임시 오버레이 제거
   let html = '<!DOCTYPE html>\n' + doc.outerHTML + '\n';
   html = html.replace(/(const TASKS = \[[\s\S]*?\n\];)(\s*\nconst COLS =)/, (m, p1, p2) => literal + p2);
   if (window.showSaveFilePicker){
     try {
-      const h = await _pickFileHandle('task-board.html');   // 파일 위치 기억(첫 선택 후 폴더 안 찾음)
+      const h = await _pickFileHandle(_FS_NAME);   // 파일 위치 기억(첫 선택 후 폴더 안 찾음)
       const w = await h.createWritable(); await w.write(html); await w.close();
-      render(); _toast('파일에 저장됨 ✓ — 다음에 열어도 유지됩니다'); return;
-    } catch(err){ if (err.name === 'AbortError') return; }   // 사용자가 피커 취소
+      const f = await h.getFile();                 // round-trip check: did the bytes land?
+      if (f.size !== new Blob([html]).size){ _toast('⚠ 저장 검증 실패 — 기록된 크기가 다릅니다. 다시 시도하세요'); return; }
+      try{ localStorage.setItem('tpb-board-saved-stamp', stamp); }catch(_e){}
+      render(); _toast('파일에 저장됨 ✓ ('+h.name+') — 다음에 열어도 유지됩니다'); return;
+    } catch(err){
+      if (err.name === 'AbortError'){ _toast('⚠ 저장 취소됨 — 파일에 기록되지 않았습니다'); return; }   // never fail silently
+      _toast('⚠ 직접 저장 실패('+err.name+') — 다운로드로 대체합니다');
+    }
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([html],{type:'text/html'})); a.download = 'task-board.html'; a.click();
+  try{ localStorage.setItem('tpb-board-saved-stamp', stamp); }catch(_e){}
   render(); _toast('다운로드됨 — 원본 task-board.html 에 덮어쓰세요');
 }
+// On load: warn if our last save-stamp is missing from this file (save went elsewhere).
+(function(){
+  try{
+    const want = localStorage.getItem('tpb-board-saved-stamp');
+    if (!want || document.documentElement.getAttribute('data-saved')===want) return;
+    const d = document.createElement('div'); d.setAttribute('data-noexport','');
+    d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c2d12;color:#fff;padding:10px 16px;font-size:13px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap';
+    d.innerHTML='⚠ <b>마지막 💾저장이 이 파일에 반영되어 있지 않습니다.</b> 저장이 다른 위치의 파일로 갔을 수 있어요.';
+    const btn=document.createElement('button'); btn.textContent='저장 위치 재선택';
+    btn.style.cssText='background:#fff;color:#7c2d12;border:0;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700';
+    btn.onclick=async()=>{ await _fsForget(); localStorage.removeItem('tpb-board-saved-stamp'); d.remove(); _toast('기억한 저장 위치를 지웠습니다 — 다음 💾저장 때 다시 선택'); };
+    const x=document.createElement('button'); x.textContent='확인(닫기)';
+    x.style.cssText='background:transparent;color:#fff;border:1px solid #ffffff88;border-radius:6px;padding:4px 10px;cursor:pointer';
+    x.onclick=()=>{ localStorage.removeItem('tpb-board-saved-stamp'); d.remove(); };
+    d.append(btn,x); document.body.appendChild(d);
+  }catch(e){}
+})();
 function _toast(msg){
   const t = document.createElement('div'); t.setAttribute('data-noexport','');
   t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#16a34a;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2)';
