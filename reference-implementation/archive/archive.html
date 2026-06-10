@@ -465,7 +465,13 @@ async function saveFile(){
 }
 // On load: if our last save-stamp is NOT in this file, the save went somewhere else — warn.
 document.addEventListener('DOMContentLoaded', ()=>{
-  if (!window.showSaveFilePicker){ const b=document.getElementById('btn-save'); if(b){ b.textContent='💾 다운로드'; b.title='Direct file write needs Chrome/Edge on file:// or localhost — this address falls back to download.'; } }
+  // file:// (double-clicked) blocks in-place write (File System Access). In-place save needs
+  // http://localhost or https; on file:// the button can only download a copy.
+  if (!window.showSaveFilePicker || location.protocol==='file:'){
+    const b=document.getElementById('btn-save');
+    if(b){ b.textContent='💾 다운로드'; b.title='On file:// the browser cannot write back to the original — it only downloads a copy. For one-click in-place save, open via a local server (http://localhost).'; }
+    const h=document.getElementById('edit-hint'); if(h) h.classList.add('is-file');
+  }
   try{
     const want = localStorage.getItem('tpb-archive-saved-stamp');
     if (!want || document.documentElement.getAttribute('data-saved')===want) return;
@@ -489,7 +495,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   <button id="btn-save" onclick="saveFile()">💾 저장</button>
   <button id="btn-cancel" onclick="toggleEdit(false)">취소</button>
 </div>
-<div id="edit-hint" data-noexport>✏️ <b>편집 모드</b> — 글을 클릭해 바로 고치고, <b>➕새 글</b>로 추가, <b>💾저장</b>으로 파일에 기록(서버 불필요). Chrome·Edge는 파일에 바로 저장 / 그 외 브라우저는 다운로드됩니다. <b>처음 한 번만</b> 파일을 골라 "덮어쓰기" 확인하면 이후엔 위치를 기억해 한 번에 저장 — 덮어쓰기는 내 편집을 내 파일에 반영하는 것이라 안전합니다.</div>
+<div id="edit-hint" data-noexport>✏️ <b>편집 모드</b> — 글을 클릭해 바로 고치고, <b>➕새 글</b>로 추가, <b>💾저장</b>으로 파일에 기록. <b>처음 한 번만</b> 파일을 골라 "덮어쓰기" 확인하면 이후엔 위치를 기억해 한 번에 저장 — 덮어쓰기는 내 편집을 내 파일에 반영하는 것이라 안전합니다. <b class="hint-srv">⚠ 원본에 바로 저장하려면 로컬 서버(<code>http://localhost</code>)나 https로 여세요. 더블클릭(file://)으로 연 경우 💾는 "사본 다운로드"만 되어, 받은 파일로 원본을 덮어써야 반영됩니다. (For one-click in-place save, open via a local server — file:// can only download a copy.)</b></div>
 <div id="add-modal" data-noexport>
   <div id="add-card">
     <h3>➕ 새 글 추가</h3>
