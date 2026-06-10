@@ -4,7 +4,6 @@
 
 > **A blueprint (methodology) — plus runnable reference implementations — for building, running,
 > and replicating an AI-indexable operational knowledge archive, from scratch.**
-> *The name's a pun 😄 — like third-party software, but for your brain: you outsource almost all the thinking to a third party (the AI).*
 
 > 🌍 **Domain-agnostic — not SAP-specific.** The worked example happens to be SAP SD operations, so
 > you'll see some SAP terms (T-Codes, etc.) in the samples — but **the pattern works for any team,

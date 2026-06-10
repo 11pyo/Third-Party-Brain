@@ -3,7 +3,6 @@
 **🌐 Language: 한국어 (이 문서) · [English](./README.en.md)** · 💬 [Discussions (피드백·질문)](https://github.com/11pyo/Third-Party-Brain/discussions)
 
 > **검색 가능한 운영 지식 아카이브(AI-indexable operational knowledge archive)를 0에서 구축·운영·복제하기 위한 방법론(블루프린트).**
-> *이름은 말장난이에요 😄 — 서드파티(외부) 소프트웨어를 쓰듯, **거의 모든 걸 AI(서드파티)에게 맡긴다**는 뜻의 "Third-Party Brain"(외주 두뇌).*
 
 > 🌍 **도메인 무관 — SAP 전용 아님.** 본보기 사례가 SAP SD 운영이라 예시에 SAP 용어(T-Code 등)가 나올 뿐, **패턴 자체는 어떤 팀·모듈·회사·주제에도 그대로** 적용됩니다 — IT 런북, 인사 절차, 고객지원 FAQ, 연구 노트, 사내 위키 등. *당신의 도메인 용어로 채우면 됩니다.*
 
