@@ -68,6 +68,7 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 14p
 #btn-cancel { background: #e2e8f0; color: #334155; }
 body.editing #btn-edit { display: none; }
 body.editing #btn-add, body.editing #btn-save, body.editing #btn-cancel { display: inline-block; }
+body.editing #header h1:hover, body.editing #header .subtitle:hover, body.editing .at:hover, body.editing .st:hover, body.editing .dt:hover, body.editing .hl-box:hover, body.editing .warn-box:hover, body.editing .tbl td:hover, body.editing .tbl th:hover, body.editing .tag:hover, body.editing .fb:hover { outline: 1px dashed #93c5fd; border-radius: 4px; cursor: text; }
 body.editing [contenteditable="true"] { outline: 1px dashed #93c5fd; border-radius: 4px; }
 body.editing [contenteditable="true"]:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
 body.editing .article { border-color: #93c5fd; }
@@ -335,13 +336,27 @@ const _CATS  = ['기초용어','프로세스','기술설정','트러블슈팅','
 const _BADGE = {'기초용어':'b-기초','프로세스':'b-프로세스','기술설정':'b-기술','트러블슈팅':'b-트러블','운영참조매뉴얼':'b-매뉴얼'};
 let _fileHandle = null;
 
-function _editableEls() {
-  return document.querySelectorAll('#header h1, #header .subtitle, .at, .st, .dt, .hl-box, .warn-box, .tbl td, .tbl th, .tag, .fb');
-}
+const _EDIT_SEL = '#header h1, #header .subtitle, .at, .st, .dt, .hl-box, .warn-box, .tbl td, .tbl th, .tag, .fb';
+// Editing is delegated: only the element you click becomes contenteditable at that
+// moment. Bulk-toggling the attribute on every element froze large archives
+// (thousands of nodes = one style/layout pass each) — this stays O(1) at any size.
 function toggleEdit(on) {
   document.body.classList.toggle('editing', on);
-  _editableEls().forEach(el => on ? el.setAttribute('contenteditable','true') : el.removeAttribute('contenteditable'));
+  if (!on) document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
 }
+document.addEventListener('click', e => {
+  if (!document.body.classList.contains('editing')) return;
+  const t = e.target.closest(_EDIT_SEL);
+  if (!t) return;
+  if (e.target.closest('a')) e.preventDefault();   // while editing, edit links instead of following them
+  if (t.isContentEditable) return;
+  t.setAttribute('contenteditable','true'); t.focus();
+  if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(e.clientX, e.clientY); if (r) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); } }
+});
+document.addEventListener('focusout', e => {
+  const t = e.target;
+  if (t && t.nodeType === 1 && t.getAttribute('contenteditable') === 'true') t.removeAttribute('contenteditable');
+});
 function _esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _slug(s){
   const base = (s.toLowerCase().replace(/[^a-z0-9가-힣]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)) || 'note';
@@ -388,7 +403,6 @@ function addArticle(){
     last.after(a);
   }
   closeAdd();
-  if (document.body.classList.contains('editing')) toggleEdit(true);  // make the new article editable too
   art.scrollIntoView({behavior:'smooth', block:'center'});
   _toast('추가됨 ✓ — 💾저장을 눌러 파일에 기록하세요');
 }

@@ -12,6 +12,10 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
 ## 2026-06-10
+- `[ALGO]` **편집 모드 perf 수정 — 일괄 contenteditable 토글 → 클릭 위임(delegation).** 종전 `toggleEdit`가 편집대상 전 요소(`_EDIT_SEL` 매칭, 정본 기준 4,787개)에 `contenteditable`을 일괄 set/remove → 토글당 헤드리스 250~360ms(실브라우저는 점선 outline 수천 개 페인트까지 추가) 렉. 변경: `toggleEdit`=body 클래스만 토글(off 시 잔여 속성 정리), **클릭한 요소만 그 순간** `contenteditable` 부여(document 클릭 위임 + `closest(_EDIT_SEL)`), `focusout`에서 회수, `caretRangeFromPoint`로 클릭 지점에 캐럿, 편집 중 본문 `<a>`는 `preventDefault`(이동 대신 편집). CSS는 `body.editing <대상>:hover` 점선 어포던스 추가(`[contenteditable="true"]` 규칙 유지). 아카이브 크기와 무관하게 O(1) — 페이지 분할 불필요 근거.
+  - 영향: 정본(비공개) `archive.html` + `reference-implementation/archive/archive.html`(공개 샘플, 동일 패턴 — 복사해 큰 아카이브 만들면 같은 함정이라 함께 수정). `addArticle` 말미의 재토글 호출 제거(위임이라 불필요). 대시보드들은 편집 노드 수가 작아 미적용.
+  - 검증: 헤드리스 preview(정본) — 토글 250~360ms→27~42ms(×3 반복), 클릭→해당 1개만 editable, blur 회수, off 후 잔여 0, add 정상, console 0 error. 공개 샘플 동일 통과.
+  - 이유: 실사용 보고("편집모드 켜고 끌 때마다 렉이 장난이 아니다"). 단일 HTML 정본 원칙(INV1) 유지 — 렉 원인은 파일 크기가 아니라 토글 알고리즘.
 - `[DOC]` **보조 노트 신설 — 범용 LLM‑위키 비교 + 2단 결합 모델.** `archive-blueprint/COMPARISON-llm-wiki.md`: 이 단일‑HTML 정본 아카이브 패턴 vs 범용 LLM‑위키(Karpathy LLM Wiki / 에이전트 `wiki` 스킬) — 공통 DNA·divergence·선택 기준 + **2단(scratch→canonical) 결합**(위키=값싼 스크래치, `archive-intake.py`=승격 게이트[NEW/UPDATE/CONFLICT/REVIEW], `archive.html`=정본, 승격 후 위키 카드 회수) + 카테고리 브리지. 번호 챕터 아님(.ai/.human 페어 없는 포지셔닝 보조).
   - 영향: `COMPARISON-llm-wiki.md`(신규), `00-INDEX.ai.md`(agent routing 7번 + version 1.7→1.8·last_updated)·`00-INDEX.human.md`(📎 포인터), `CHANGELOG.*`. 핵심 도구 로직 불변(신규 코드 0).
   - 이유: 사용자 질문 기록 + 범용 위키와 결합 방법 명문화.
