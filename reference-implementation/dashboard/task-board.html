@@ -401,12 +401,12 @@ function renderBar(){
   const n = Object.keys(overrides).length;
   editbar.innerHTML =
     `<span>✏️ 카드 <b>수정</b>→저장 · 변경 <b>${n}건</b></span>` +
-    `<button id="savef" style="background:#16a34a;color:#fff;font-weight:700">💾 파일에 저장 (클로드 불필요)</button>` +
+    `<button id="savef"${n?'':' disabled'} style="${n?'background:#16a34a;color:#fff;':''}font-weight:700">💾 파일에 저장 (클로드 불필요)</button>` +
     `<button id="exp"${n?'':' disabled'}>📤 변경분 내보내기(JSON)</button>` +
     `<button id="rst"${n?'':' disabled'}>전체 초기화</button>` +
     (n ? `<span class="warn-txt">💾 <b>파일에 저장</b>하면 정본에 바로 기록(서버·클로드 불필요). 내보내기(JSON)는 정본을 클로드로 동기화하던 옛 방식.</span>`
-       : `<span style="color:#b08968;">(카드를 수정하면 변경분 버튼이 켜집니다 — 💾 저장은 언제든 가능)</span>`);
-  editbar.querySelector('#savef').onclick = saveToFile;
+       : `<span style="color:#b08968;">(카드를 수정하면 저장·내보내기 버튼이 켜집니다)</span>`);
+  if (n) editbar.querySelector('#savef').onclick = saveToFile;
   if (n){
     editbar.querySelector('#exp').onclick = exportJSON;
     editbar.querySelector('#rst').onclick = () => {
