@@ -3,8 +3,8 @@ doc_type: ai_reference
 audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
-version: 1.7
-last_updated: 2026-06-09
+version: 1.8
+last_updated: 2026-06-10
 read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
 governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 블루프린트 동기화 + CHANGELOG 기록 의무 (아래 MANDATORY SYNC 참조)"
@@ -38,6 +38,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 4. "어떻게 만들어졌나" 이력 → `02-buildup-process.ai.md`.
 5. 대시보드/문의로그/조직맵 (개념) → `05-operational-layer.ai.md`. 정형보고 자동화/읽기전용 운영시스템 가이드/업적적재 → `06-automation-and-ops-model.ai.md`.
 6. 대시보드 **운영 규칙·CLI 사용법** (실무 매뉴얼) → `07-dashboard-operating-guide.ai.md`. 실행 가능한 익명 동작본(더블클릭 실행) → `reference-implementation/dashboard/`.
+7. 사용자가 "범용 LLM‑위키(예: Karpathy LLM Wiki·에이전트 `wiki` 스킬)와의 차이/결합"을 물으면 → 보조 노트 `COMPARISON-llm-wiki.md`(번호 챕터 아님; 비교 + 2단 scratch→canonical 승격 게이트 매핑[NEW/UPDATE/CONFLICT/REVIEW]).
 
 ## ARTIFACT MAP (원본 아카이브 구성물)
 | 파일 | 역할 | 비고 |

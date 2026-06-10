@@ -23,6 +23,7 @@
 
 > ⭐ **실행 예제** (`reference-implementation/`, 모든 데이터 가상 샘플): `archive/` — 제3의뇌 아카이브 엔진(BM25 검색서버·인테이크·TUI + 샘플 `archive.html`) · `dashboard/` — 07 챕터 대시보드(더블클릭 실행). 대시보드는 **별도 전용 레포 `11pyo/ai-collab-dashboard`** 로도 존재.
 > 🤖 **새 AI 세션**은 루트 `AGENTS.md`(+ Claude Code가 자동 로드하는 `CLAUDE.md`)부터 읽으면 기능·룰·방향이 바로 온보딩됩니다.
+> 📎 **보조 노트(번호 챕터 아님)**: `COMPARISON-llm-wiki.md` — 이 아카이브 패턴 vs 범용 LLM‑위키 도구(Karpathy LLM Wiki·에이전트 `wiki` 스킬) 비교 + 2단(스크래치→정본) 결합 모델.
 
 ## ⛔ 꼭 지켜야 할 규칙 — 변경 시 동기화
 

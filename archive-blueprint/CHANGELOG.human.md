@@ -11,6 +11,11 @@
 
 ## 2026-06-10
 
+- **`[문서]` 보조 노트 신설 — 범용 LLM‑위키 도구와의 비교 + 2단 결합 모델.**
+  - `archive-blueprint/COMPARISON-llm-wiki.md` 추가: 이 '단일 HTML 정본 아카이브' 패턴과 범용 LLM‑위키(Karpathy LLM Wiki·에이전트 `wiki` 스킬)의 공통 DNA·차이·선택 기준, 그리고 **2단(스크래치→정본) 결합 모델**(위키=값싼 임시, `archive-intake.py`=승격 게이트, `archive.html`=정본, 승격 후 위키 카드 회수)을 정리. 번호 챕터(00~07)가 아닌 포지셔닝 보조 문서(.ai/.human 페어 없음).
+  - 영향: `COMPARISON-llm-wiki.md`(신규), `00-INDEX.human.md`·`00-INDEX.ai.md`(포인터 + version 1.7→1.8), `CHANGELOG.*`. 핵심 도구 로직 불변(신규 코드 0).
+  - 이유: 사용자 질문("범용 wiki 스킬과 제3의뇌 차이") 기록 + 두 접근의 결합 방법 명문화.
+
 - **`[구조]` 아카이브·대시보드에 '서버 없는 직접 편집(✏️)' 추가.**
   - 실사용 피드백("간단 수정도 클로드를 거쳐야 하나?")에 대응: `reference-implementation/archive/archive.html`와 (별도 레포)대시보드 `task-board.html`에 **편집 모드** 내장. 글/카드를 브라우저에서 바로 고치고, **➕새 글·태스크** 추가·🗑삭제, **💾저장** 시 **File System Access API**로 파일에 바로 기록(Chrome·Edge)·미지원 브라우저는 다운로드 폴백. **서버도 클로드도 불필요**(file:// 에서 동작). 이 레포 안 대시보드 미러본(`reference-implementation/dashboard/`)과 실무용(비공개) 대시보드에도 동일하게 **💾 파일에 저장**(기존 편집기 + 직접 파일기록) 추가.
   - 검증: 편집 토글·추가(아카이브=사이드바·카운트 갱신 / 대시보드=`TASKS` 모델 갱신)·저장 직렬화(편집 UI 제거·contenteditable 속성 0·편집본 반영, 편집 스크립트는 보존해 저장본도 재편집 가능) 헤드리스 확인, 콘솔 에러 0.
