@@ -27,17 +27,20 @@
 
 ## 실행
 
-```bash
-# 1) 화면 보기 — task-board.html 더블클릭 (또는 브라우저로 열기)
+**① 화면 보기** — `task-board.html` 더블클릭 (또는 브라우저로 열기, 서버 불요).
+**② 문의 기록은 AI에게 말로** — 명령어를 직접 칠 필요 없이, AI에게 *"이 문의 접수해줘 / 진행중으로 바꿔줘 / 답변 달고 완료해줘"* 라고 하면 AI가 아래 `log-inquiry.py`를 **대신 실행**합니다. (핵심 = 사람이 CLI를 외우는 게 아니라 **AI가 대신 안전하게 기록**.)
+**③ 브라우저 새로고침** = 반영.
 
-# 2) 문의 한 건 기록 (접수 → 전이 → 완료)
+<details><summary>↳ AI가 실제로 실행하는 명령 (직접 쓰고 싶을 때만 펼쳐 보세요)</summary>
+
+```bash
+# 새 문의 접수 → 상태 전이 → 완료 (같은 id 재사용 = 병합)
 python log-inquiry.py --new --type 단순문의 --q "<문의 요약>" --by <기록자> --req "<요청자·조직>"
 #   → 'NEW id=INQ-YYMMDD-HHMMSS' 의 id 를 기억
 python log-inquiry.py --id <그-id> --status 진행중
 python log-inquiry.py --done --id <그-id> --a "<처리 요약>" --ref "#<관련-앵커>"
-
-# 3) 브라우저 새로고침 = 반영
 ```
+</details>
 
 - 카드를 **✏️수정**한 뒤 편집바의 **💾 파일에 저장**을 누르면 **서버·클로드 없이 파일(`task-board.html`)에 바로 기록**됩니다 (Chrome·Edge는 File System Access API로 즉시 저장 / 그 외 브라우저는 다운로드). 「변경분 내보내기(JSON)」는 `tasks.md`를 클로드로 동기화하던 옛 방식입니다. · **EN:** edit a card, then **💾 Save to file** writes it straight back to `task-board.html` (no server, no Claude); the JSON export is the old Claude-sync path.
   - 💡 **"덮어쓰기"가 걱정되면:** 내 파일을 방금 한 편집으로 갱신하는 것뿐(데이터 삭제 아님). **처음 한 번만** 파일을 골라 확인하면 이후엔 위치를 **기억해 한 번에** 저장(폴더 안 찾음). 화면 띄워둔 채로 OK. · **EN:** overwriting just updates *your own* file with your edits; pick it once, then one-click saves remember the location.
