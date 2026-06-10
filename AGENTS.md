@@ -74,6 +74,7 @@ Third-Party-Brain/
 
 ## 6. Common tasks · 자주 하는 작업
 
+- **When asked to "set this up", offer a choice first** (don't assume): **Ⓐ explore the demo** (run the sample archive/dashboard below) or **Ⓑ build their own** — then run the STEP 0 interview (domain · categories · sensitive list · code notation · synonyms · real content). Never fabricate the user's domain knowledge. · **"셋업해줘" 하면 먼저 선택지 제시**: Ⓐ 데모 둘러보기 / Ⓑ 내 아카이브 만들기(STEP 0 인터뷰부터). 도메인 지식 임의 생성 금지.
 - **Run the archive search server** — `cd reference-implementation/archive && python archive-server.py` (→ http://localhost:5174). `--share` for LAN.
 - **Check before adding a knowledge article** — `python archive-intake.py "<keywords>"` (duplicate/conflict/placement).
 - **Open the dashboard** — open `reference-implementation/dashboard/task-board.html` in a browser.

@@ -14,15 +14,11 @@
 ---
 
 ## 🤖 AI로 바로 빌드·실행 · Build / run with an AI
-클론한 뒤 폴더를 AI 비서에게 주고 **"`AGENTS.md` 읽고 구성/실행해줘"** 라고 하면, 새 AI 세션이
-`AGENTS.md`(+`CLAUDE.md`)로 자동 온보딩해 의도대로 진행합니다:
-- **실행 동작본 바로 돌리기** — `reference-implementation/dashboard/`(브라우저로 열기, **빌드 불요**) ·
-  `reference-implementation/archive/`(`pip install -r requirements.txt` → `python archive-server.py`).
-- **새 아카이브 만들기** — `archive-blueprint/04-replication-playbook` 절차대로.
-  - 이때 AI가 **먼저 당신에게 묻습니다(STEP 0)** → 주제(도메인)·카테고리·**저장 금지(민감정보) 목록**·코드 표기·동의어, 그리고 **실제 채울 지식 내용**(AI가 지어내지 않음). 대시보드까지면 상태·분류·태스크 데이터도.
+**✅ 데모 포함** — 클론하면 가짜 샘플 아카이브가 **바로 돕니다**. 폴더를 AI에게 주고 **"`AGENTS.md` 읽고 셋업해줘"** 라고 하면, AI가 **쉬운 선택**을 제시합니다:
+- **Ⓐ 데모 보기** → `reference-implementation/archive/`(`pip install -r requirements.txt` → `python archive-server.py`) · `reference-implementation/dashboard/`(브라우저로 열기, 빌드 불요).
+- **Ⓑ 내 아카이브 만들기** → AI가 **먼저 당신에게 묻습니다(STEP 0)**: 주제(도메인)·카테고리·**민감정보 금지목록**·코드 표기·동의어 + **실제 채울 지식 내용**(지어내지 않음). 절차 = `archive-blueprint/04-replication-playbook`.
 
-**준비물:** Python 3.8+ (아카이브 검색서버). ※ 아카이브의 *AI 자연어 답변* 기능만 로컬 `claude` CLI 필요 —
-검색·인테이크·대시보드는 CLI 없이도 동작.
+**준비물:** Python 3.8+ (아카이브 검색서버). ※ *AI 자연어 답변* 기능만 로컬 `claude` CLI 필요 — 검색·인테이크·대시보드는 CLI 없이도 동작.
 
 ---
 

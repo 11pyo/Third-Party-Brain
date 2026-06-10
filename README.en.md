@@ -17,16 +17,16 @@ One HTML file (data + UI + search) + a few Python tools + local-AI natural-langu
 ---
 
 ## 🤖 Build / run with an AI
-Clone, then hand the folder to your AI assistant and say: **"Read `AGENTS.md` and set this up / run it."**
-A fresh AI session auto-onboards via `AGENTS.md` (+ `CLAUDE.md`) and does the intended thing:
-- **Run the reference implementations** — `reference-implementation/dashboard/` opens in a browser
-  (**no build**); `reference-implementation/archive/` is `pip install -r requirements.txt` then
-  `python archive-server.py`.
-- **Replicate a new archive** for your own domain — follow `archive-blueprint/04-replication-playbook`.
-  - The AI first **asks you for (STEP 0)**: the domain · categories · a **do-not-store (sensitive) list** · code notation · synonyms — and **the real content to fill it** (it won't invent your knowledge). Plus statuses/classification/task data if you use the dashboard.
+**✅ Demo included.** Clone and the sample archive **runs right away**. Hand the folder to your AI and
+say **"Read `AGENTS.md` and set this up"** — it offers an easy choice:
+- **Ⓐ See the demo** → `reference-implementation/archive/` (`pip install -r requirements.txt` then
+  `python archive-server.py`) · `reference-implementation/dashboard/` (open in a browser, no build).
+- **Ⓑ Build your own archive** → the AI first **asks you (STEP 0)**: the domain · categories · a
+  **do-not-store (sensitive) list** · code notation · synonyms — and **the real content to fill it**
+  (it won't invent your knowledge). Steps: `archive-blueprint/04-replication-playbook`.
 
-**Prereqs:** Python 3.8+ (archive search server). The archive's *natural-language AI answer* feature
-also needs a local `claude` CLI — search/intake/dashboard work without it.
+**Prereqs:** Python 3.8+ (archive search server). The *natural-language AI answer* feature also needs a
+local `claude` CLI — search/intake/dashboard work without it.
 
 ---
 
