@@ -2,23 +2,17 @@
 
 **🌐 Language: [한국어](./README.md) · English (this page)** · 🤖 [AGENTS.md](./AGENTS.md) · 💬 [Discussions](https://github.com/11pyo/Third-Party-Brain/discussions)
 
-> **A blueprint (methodology) — plus runnable reference implementations — for building, running,
-> and replicating an AI-indexable operational knowledge archive, from scratch.**
+> **A project to build a "brain + hands" you can hand almost all your thinking and doing to.**
+> Today, its first piece — **an AI-searchable knowledge archive ("a third brain") you run from a few files**, plus the blueprint to replicate your own.
+
+> 🧭 **Two repos (separate tools, both run now):** 🧠 **Third-Party-Brain** = the knowledge brain (search · replicate) · 🗂️ **[AI Collaboration Dashboard](https://github.com/11pyo/ai-collab-dashboard)** = a concurrency-safe task board. *New here? Start with the brain.*
 
 > 🌍 **Domain-agnostic — not SAP-specific.** The worked example happens to be SAP SD operations, so
 > you'll see some SAP terms (T-Codes, etc.) in the samples — but **the pattern works for any team,
 > module, company, or topic**: IT runbooks, HR procedures, a support FAQ, research notes, a team wiki.
 > *Just fill it with your own domain's terms.*
 
-> 🔗 **A pair** — this is the *memory* half (the knowledge archive); the *workflow* half is the **[AI Collaboration Dashboard](https://github.com/11pyo/ai-collab-dashboard)**.
-
-A lightweight, portable pattern for an internal knowledge archive that runs on **a few files** — no
-heavy database, no server install. It's one HTML file (data + UI + search), a few Python tools, and
-local-AI natural-language search. The origin case is an SAP SD operations archive (an example
-domain); the pattern applies just as well to other ERP modules, teams, companies, or a general
-internal wiki.
-
-The **primary content here is the knowledge archive + AI collaboration**.
+One HTML file (data + UI + search) + a few Python tools + local-AI natural-language search. No external DB or server install; works offline.
 
 ---
 
