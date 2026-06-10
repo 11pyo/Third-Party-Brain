@@ -58,6 +58,31 @@ body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 14p
 .hl-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 7px; padding: 11px 13px; margin-bottom: 10px; font-size: 13px; }
 .warn-box { background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #ea580c; border-radius: 7px; padding: 11px 13px; margin: 10px 0; font-size: 13px; color: #9a3412; }
 .article.hidden { display: none; }
+/* ── Edit mode (server-less; saves via File System Access API, else downloads) ── */
+#edit-fab { position: fixed; bottom: 22px; right: 22px; z-index: 1000; display: flex; gap: 8px; }
+#edit-fab button { font: inherit; font-size: 13px; font-weight: 700; border: none; border-radius: 24px; padding: 10px 16px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.2); }
+#btn-edit { background: #1d4ed8; color: #fff; }
+#btn-add, #btn-save, #btn-cancel { display: none; }
+#btn-add { background: #0ea5e9; color: #fff; }
+#btn-save { background: #16a34a; color: #fff; }
+#btn-cancel { background: #e2e8f0; color: #334155; }
+body.editing #btn-edit { display: none; }
+body.editing #btn-add, body.editing #btn-save, body.editing #btn-cancel { display: inline-block; }
+body.editing [contenteditable="true"] { outline: 1px dashed #93c5fd; border-radius: 4px; }
+body.editing [contenteditable="true"]:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
+body.editing .article { border-color: #93c5fd; }
+#edit-hint { position: fixed; bottom: 22px; left: 22px; z-index: 1000; background: #1e293b; color: #fff; font-size: 12px; padding: 8px 12px; border-radius: 8px; display: none; max-width: 330px; line-height: 1.55; }
+body.editing #edit-hint { display: block; }
+#add-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 1100; display: none; align-items: center; justify-content: center; }
+#add-modal.open { display: flex; }
+#add-card { background: #fff; border-radius: 12px; padding: 22px; width: 460px; max-width: 92vw; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+#add-card h3 { font-size: 15px; margin-bottom: 6px; color: #1a2744; }
+#add-card label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin: 10px 0 4px; }
+#add-card input, #add-card textarea, #add-card select { width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 13px; }
+#add-card textarea { height: 100px; resize: vertical; }
+#add-card .row { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+#add-card .row button { font: inherit; font-weight: 700; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+.toast { position: fixed; bottom: 70px; right: 22px; background: #16a34a; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 1200; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
 </style>
 </head>
 <body>
@@ -302,7 +327,117 @@ document.querySelectorAll('.nav-link').forEach(link => {
     if (el) { e.preventDefault(); el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
   });
 });
+
+// ── Server-less edit mode — fix text in place, add articles, save to the file ──
+// Save uses the File System Access API (Chrome/Edge: writes back in place); other
+// browsers fall back to downloading the updated archive.html. No server needed.
+const _CATS  = ['기초용어','프로세스','기술설정','트러블슈팅','운영참조매뉴얼'];
+const _BADGE = {'기초용어':'b-기초','프로세스':'b-프로세스','기술설정':'b-기술','트러블슈팅':'b-트러블','운영참조매뉴얼':'b-매뉴얼'};
+let _fileHandle = null;
+
+function _editableEls() {
+  return document.querySelectorAll('#header h1, #header .subtitle, .at, .st, .dt, .hl-box, .warn-box, .tbl td, .tbl th, .tag, .fb');
+}
+function toggleEdit(on) {
+  document.body.classList.toggle('editing', on);
+  _editableEls().forEach(el => on ? el.setAttribute('contenteditable','true') : el.removeAttribute('contenteditable'));
+}
+function _esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _slug(s){
+  const base = (s.toLowerCase().replace(/[^a-z0-9가-힣]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)) || 'note';
+  let id = base, n = 2; while (document.getElementById(id)) id = base + '-' + (n++); return id;
+}
+function _today(){ return new Date().toISOString().slice(0,10); }
+
+function openAdd(){
+  document.getElementById('add-cat').innerHTML = _CATS.map(c=>`<option>${c}</option>`).join('');
+  ['add-title','add-tags','add-body'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAdd(){ document.getElementById('add-modal').classList.remove('open'); }
+
+function addArticle(){
+  const title = document.getElementById('add-title').value.trim();
+  const cat   = document.getElementById('add-cat').value;
+  const tags  = document.getElementById('add-tags').value.trim();
+  const body  = document.getElementById('add-body').value.trim();
+  if(!title){ alert('제목을 입력하세요'); return; }
+  const id = _slug(title), today = _today();
+  const tagHtml  = tags ? tags.split(/\s+/).map(t=>`<span class="tag">${_esc(t)}</span>`).join('') : '';
+  const bodyHtml = (body||'(내용 없음)').split(/\n\n+/).map(p=>`<p>${_esc(p).replace(/\n/g,'<br>')}</p>`).join('');
+  const art = document.createElement('article');
+  art.className='article'; art.id=id;
+  art.setAttribute('data-tags', (title+' '+tags+' '+cat).trim());
+  art.innerHTML = `\n  <div class="ah">\n    <div class="at">${_esc(title)}</div>\n    <span class="badge ${_BADGE[cat]}">${cat}</span>\n    <span class="db">${today}</span>\n  </div>\n  <div class="tags">${tagHtml}</div>\n  <div class="sec"><div class="dt">${bodyHtml}</div></div>\n`;
+  // insert at the end of that category's section in #content + bump the count
+  const hdr = [...document.querySelectorAll('#content .cat-header')].find(h=>h.textContent.includes(cat));
+  if (hdr){
+    let n = hdr.nextElementSibling, last = hdr;
+    while (n && !n.classList.contains('cat-header')){ last = n; n = n.nextElementSibling; }
+    last.after(art);
+    const cnt = hdr.querySelector('.cnt'); if (cnt) cnt.textContent = (parseInt(cnt.textContent||'0',10)+1);
+  } else { document.getElementById('content').appendChild(art); }
+  // sidebar nav link
+  const navHdr = [...document.querySelectorAll('#sidebar .nav-cat-title')].find(x=>x.textContent.includes(cat));
+  if (navHdr){
+    let n = navHdr.nextElementSibling, last = navHdr;
+    while (n && !n.classList.contains('nav-cat-title')){ last = n; n = n.nextElementSibling; }
+    const a = document.createElement('a'); a.className='nav-link'; a.href='#'+id;
+    a.innerHTML = `${_esc(title)}<span class="nd">${today}</span>`;
+    a.addEventListener('click', e=>{ const el=document.getElementById(id); if(el){e.preventDefault(); el.scrollIntoView({behavior:'smooth',block:'start'});} });
+    last.after(a);
+  }
+  closeAdd();
+  if (document.body.classList.contains('editing')) toggleEdit(true);  // make the new article editable too
+  art.scrollIntoView({behavior:'smooth', block:'center'});
+  _toast('추가됨 ✓ — 💾저장을 눌러 파일에 기록하세요');
+}
+
+function _toast(msg){
+  const t = document.createElement('div'); t.className='toast'; t.setAttribute('data-noexport','');
+  t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
+}
+
+async function saveFile(){
+  const doc = document.documentElement.cloneNode(true);
+  doc.querySelectorAll('[data-noexport], #ai-toggle, #ai-panel').forEach(el=>el.remove());      // strip edit UI + (server-injected) AI panel
+  doc.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+  doc.querySelectorAll('.article.hidden').forEach(el=>el.classList.remove('hidden'));            // un-hide any search-filtered articles
+  const b = doc.querySelector('body'); if (b) b.classList.remove('editing');
+  const html = '<!DOCTYPE html>\n' + doc.outerHTML + '\n';
+  if (window.showSaveFilePicker){
+    try {
+      if (!_fileHandle) _fileHandle = await window.showSaveFilePicker({ suggestedName:'archive.html', types:[{description:'HTML', accept:{'text/html':['.html']}}] });
+      const w = await _fileHandle.createWritable(); await w.write(html); await w.close();
+      toggleEdit(false); _toast('파일에 저장됨 ✓'); return;
+    } catch(e){ if (e.name==='AbortError') return; }   // user cancelled the picker
+  }
+  const a = document.createElement('a');                                                          // fallback: download
+  a.href = URL.createObjectURL(new Blob([html],{type:'text/html'})); a.download='archive.html'; a.click();
+  toggleEdit(false); _toast('다운로드됨 — 원본 archive.html에 덮어쓰세요');
+}
 </script>
+
+<div id="edit-fab" data-noexport>
+  <button id="btn-edit" onclick="toggleEdit(true)" title="서버 없이 직접 편집">✏️ 편집</button>
+  <button id="btn-add" onclick="openAdd()">➕ 새 글</button>
+  <button id="btn-save" onclick="saveFile()">💾 저장</button>
+  <button id="btn-cancel" onclick="toggleEdit(false)">취소</button>
+</div>
+<div id="edit-hint" data-noexport>✏️ <b>편집 모드</b> — 글을 클릭해 바로 고치고, <b>➕새 글</b>로 추가, <b>💾저장</b>으로 파일에 기록(서버 불필요). Chrome·Edge는 파일에 바로 저장 / 그 외 브라우저는 다운로드됩니다.</div>
+<div id="add-modal" data-noexport>
+  <div id="add-card">
+    <h3>➕ 새 글 추가</h3>
+    <label>제목</label><input id="add-title" placeholder="예) 월말 마감 체크리스트">
+    <label>카테고리</label><select id="add-cat"></select>
+    <label>태그 (공백으로 구분 — 검색 키워드)</label><input id="add-tags" placeholder="결산 월말 체크리스트">
+    <label>내용</label><textarea id="add-body" placeholder="본문. 빈 줄로 문단 구분."></textarea>
+    <div class="row">
+      <button onclick="closeAdd()" style="background:#e2e8f0;color:#334155">취소</button>
+      <button onclick="addArticle()" style="background:#1d4ed8;color:#fff">추가</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

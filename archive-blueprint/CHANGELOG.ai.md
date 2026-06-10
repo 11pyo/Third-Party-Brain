@@ -3,13 +3,19 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-06-09
+last_updated: 2026-06-10
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
 # CHANGELOG (프로그램·알고리즘·구조)
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
+
+## 2026-06-10
+- `[STRUCTURE]` **서버 없는 인-브라우저 편집(✏️) 추가** — `reference-implementation/archive/archive.html` + (별도 레포)대시보드 `task-board.html`. 편집모드(`contenteditable` 토글 + 새 글/태스크 추가 + 🗑삭제), **저장=File System Access API로 원본 파일 write-back**(`showSaveFilePicker`, 핸들 캐시), 미지원 시 `download` 폴백. 저장 직렬화는 `[data-noexport]`(편집 UI)·`#ai-toggle/#ai-panel`(서버주입분) 제거 + `contenteditable` 속성 제거 + `.hidden` 해제, 편집 스크립트/CSS는 **보존**(저장본도 재편집 가능). 대시보드는 `outerHTML` 직렬화 후 정규식 `/const TASKS = \[[\s\S]*?\n\];/`를 모델 JSON으로 1회 교체.
+  - 영향: `reference-implementation/archive/archive.html`·`(ai-collab-dashboard)/task-board.html`(편집 CSS/UI/JS), `README.md`/`README.en.md`·`reference-implementation/archive/README.md`·`AGENTS.md`(✏️ 안내), `CHANGELOG.*`. 핵심 도구(`archive-server.py` 등) 로직은 불변.
+  - 검증: preview 헤드리스 — 편집토글·add(아티클: 사이드바·카운트 갱신 / 태스크: TASKS 모델 갱신)·저장직렬화(`elementsWithContenteditableAttr=0`, TASKS 리터럴 1개로 교체, 편집본 반영, 편집 스크립트 보존) 통과, console 0 error.
+  - 이유: 실사용 피드백(간단 수정을 클로드 없이) 수용. 서버리스·무의존 원칙(INV1) 유지 — `file://` 에서 동작.
 
 ## 2026-06-09
 - `[STRUCTURE]` **아카이브 익명 동작본(참조 구현) 추가 + 루트 AI 온보딩 신설 + 문서 한/영 병기.** `reference-implementation/archive/`(`archive-server.py` BM25검색서버·`archive-intake.py`·`archive-menu.py` TUI·sample `archive.html` 9art/5cat·`archive-structure.md`·`requirements.txt`·`run-*.bat/sh`·`README.md`). 루트 `AGENTS.md`+`CLAUDE.md` 신설(새 세션 자동 온보딩=기능·룰·방향; Claude Code는 `CLAUDE.md` auto-load→`AGENTS.md` 유도). AI 협업 대시보드=**별도 전용 레포 `11pyo/ai-collab-dashboard`** 명시(이 repo 주콘텐츠=아카이브+AI협업). 신규 문서 KO+EN(`README.en.md` 추가).

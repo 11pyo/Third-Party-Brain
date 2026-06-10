@@ -34,6 +34,11 @@ Windows: double-click `run-server.bat` / `run-server-lan.bat` / `run-menu.bat`.
 The Claude CLI is only needed for AI answers; search/intake/TUI work without it.
 Claude CLI는 AI 답변에만 필요 — 검색·인테이크·TUI는 없어도 동작.
 
+## ✏️ Edit directly (no Claude, no server) · 직접 수정 (클로드·서버 불필요)
+**EN** — Open `archive.html` and click **✏️ 편집** (bottom-right): fix any text in place, **➕ 새 글** to add an article (it builds the structure + sidebar link + count for you), then **💾 저장**. On Chrome/Edge it writes back to the file via the File System Access API; other browsers download the updated file. No server, no Claude needed for simple knowledge entry/edits.
+
+**KO** — `archive.html`을 열고 우하단 **✏️ 편집** → 글을 바로 고치고 **➕ 새 글**로 추가(구조·사이드바·카운트 자동) → **💾 저장**. Chrome·Edge는 File System Access API로 파일에 바로 저장 / 그 외 브라우저는 다운로드. 간단한 지식 입력·수정은 **서버도 클로드도 불필요**.
+
 ## Files · 파일
 | File | Role · 역할 |
 |------|------|

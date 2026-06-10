@@ -79,6 +79,8 @@ Third-Party-Brain/
 
 **먼저 선택지 제시** (지레짐작 금지): **Ⓐ 데모 보기** → 포함된 샘플 바로 실행(아카이브 `python archive-server.py` 또는 `dashboard/task-board.html`, 전부 가짜 데이터) · **Ⓑ 내 아카이브 만들기** → STEP 0 인터뷰(도메인·카테고리·민감정보 금지목록·코드표기·동의어·**실제 콘텐츠**)부터, 절차는 `04-replication-playbook`. 도메인 지식 임의 생성 금지.
 
+> **✏️ Users can self-edit · 직접 수정 가능:** `archive.html` has a built-in **Edit** button (server-less — saves via File System Access API, else download): fix text + add articles with no server and no Claude. For small knowledge entry/edits, point the user there; use the AI for bigger restructures or the conflict/intake checks. · 글 수정·추가는 페이지의 **✏️ 편집** 버튼으로 사용자가 직접(서버·클로드 불필요). AI는 큰 재구성·충돌검사에.
+
 ## 7. Common tasks · 자주 하는 작업
 
 - **Run the archive search server** — `cd reference-implementation/archive && python archive-server.py` (→ http://localhost:5174). `--share` for LAN.
