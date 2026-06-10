@@ -398,6 +398,17 @@ function _toast(msg){
   t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
 }
 
+// Remember the chosen file (IndexedDB) so after the first pick it saves back to the
+// same file with no folder-hunting.
+function _fsOpen(){ return new Promise(r=>{ const q=indexedDB.open('tbfs',1); q.onupgradeneeded=()=>q.result.createObjectStore('h'); q.onsuccess=()=>r(q.result); q.onerror=()=>r(null); }); }
+async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get('f'); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,'f'); }catch(e){} }
+async function _pickFileHandle(name){
+  let h = window._fh || await _fsLoad();
+  if (h){ try{ const o={mode:'readwrite'}; if(await h.queryPermission(o)!=='granted' && await h.requestPermission(o)!=='granted') h=null; }catch(e){ h=null; } }
+  if (!h){ h = await window.showSaveFilePicker({ suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] }); await _fsStore(h); }
+  window._fh = h; return h;
+}
 async function saveFile(){
   const doc = document.documentElement.cloneNode(true);
   doc.querySelectorAll('[data-noexport], #ai-toggle, #ai-panel').forEach(el=>el.remove());      // strip edit UI + (server-injected) AI panel
@@ -407,8 +418,8 @@ async function saveFile(){
   const html = '<!DOCTYPE html>\n' + doc.outerHTML + '\n';
   if (window.showSaveFilePicker){
     try {
-      if (!_fileHandle) _fileHandle = await window.showSaveFilePicker({ suggestedName:'archive.html', types:[{description:'HTML', accept:{'text/html':['.html']}}] });
-      const w = await _fileHandle.createWritable(); await w.write(html); await w.close();
+      const h = await _pickFileHandle('archive.html');   // 파일 위치 기억(첫 선택 후 폴더 안 찾음)
+      const w = await h.createWritable(); await w.write(html); await w.close();
       toggleEdit(false); _toast('파일에 저장됨 ✓'); return;
     } catch(e){ if (e.name==='AbortError') return; }   // user cancelled the picker
   }
@@ -424,7 +435,7 @@ async function saveFile(){
   <button id="btn-save" onclick="saveFile()">💾 저장</button>
   <button id="btn-cancel" onclick="toggleEdit(false)">취소</button>
 </div>
-<div id="edit-hint" data-noexport>✏️ <b>편집 모드</b> — 글을 클릭해 바로 고치고, <b>➕새 글</b>로 추가, <b>💾저장</b>으로 파일에 기록(서버 불필요). Chrome·Edge는 파일에 바로 저장 / 그 외 브라우저는 다운로드됩니다.</div>
+<div id="edit-hint" data-noexport>✏️ <b>편집 모드</b> — 글을 클릭해 바로 고치고, <b>➕새 글</b>로 추가, <b>💾저장</b>으로 파일에 기록(서버 불필요). Chrome·Edge는 파일에 바로 저장 / 그 외 브라우저는 다운로드됩니다. <b>처음 한 번만</b> 파일을 골라 "덮어쓰기" 확인하면 이후엔 위치를 기억해 한 번에 저장 — 덮어쓰기는 내 편집을 내 파일에 반영하는 것이라 안전합니다.</div>
 <div id="add-modal" data-noexport>
   <div id="add-card">
     <h3>➕ 새 글 추가</h3>

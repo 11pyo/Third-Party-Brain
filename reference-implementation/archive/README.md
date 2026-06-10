@@ -39,6 +39,8 @@ Claude CLI는 AI 답변에만 필요 — 검색·인테이크·TUI는 없어도 
 
 **KO** — `archive.html`을 열고 우하단 **✏️ 편집** → 글을 바로 고치고 **➕ 새 글**로 추가(구조·사이드바·카운트 자동) → **💾 저장**. Chrome·Edge는 File System Access API로 파일에 바로 저장 / 그 외 브라우저는 다운로드. 간단한 지식 입력·수정은 **서버도 클로드도 불필요**.
 
+> 💡 **"기존 파일 덮어쓰기"가 걱정되면:** 내 파일을 방금 한 편집으로 갱신하는 것뿐이라 안전합니다(데이터 삭제 아님, 수정 반영). **처음 한 번만** `archive.html`을 골라 "덮어쓰기" 확인 → 이후엔 위치를 **기억해 한 번에** 저장. 화면 띄워둔 채로 OK. · **EN:** overwriting just updates *your own* file with your edits (nothing is wiped); pick the file once, then it's remembered for one-click saves — keep the page open while you do it.
+
 ## Files · 파일
 | File | Role · 역할 |
 |------|------|

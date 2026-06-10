@@ -444,6 +444,16 @@ function exportJSON(){
 // ── 💾 파일에 직접 저장 (서버·클로드 불필요) ──
 // 현재 편집(overrides)을 TASKS에 반영해 파일 전체를 다시 쓴다. Chrome·Edge는 File System
 // Access API로 원본에 바로 기록, 그 외 브라우저는 수정본 다운로드(원본에 덮어쓰기).
+// 파일을 한 번 고르면 그 위치를 기억(IndexedDB)해서, 다음부터는 폴더 안 찾고 바로 저장.
+function _fsOpen(){ return new Promise(r=>{ const q=indexedDB.open('tbfs',1); q.onupgradeneeded=()=>q.result.createObjectStore('h'); q.onsuccess=()=>r(q.result); q.onerror=()=>r(null); }); }
+async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get('f'); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,'f'); }catch(e){} }
+async function _pickFileHandle(name){
+  let h = window._fh || await _fsLoad();
+  if (h){ try{ const o={mode:'readwrite'}; if(await h.queryPermission(o)!=='granted' && await h.requestPermission(o)!=='granted') h=null; }catch(e){ h=null; } }
+  if (!h){ h = await window.showSaveFilePicker({ suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] }); await _fsStore(h); }
+  window._fh = h; return h;
+}
 async function saveToFile(){
   const merged = mergedTasks();
   TASKS.length = 0; merged.forEach(t => TASKS.push(t));   // 편집분을 정본 배열에 베이크
@@ -455,8 +465,8 @@ async function saveToFile(){
   html = html.replace(/(const TASKS = \[[\s\S]*?\n\];)(\s*\nconst COLS =)/, (m, p1, p2) => literal + p2);
   if (window.showSaveFilePicker){
     try {
-      if (!window._fh) window._fh = await window.showSaveFilePicker({ suggestedName:'task-board.html', types:[{description:'HTML', accept:{'text/html':['.html']}}] });
-      const w = await window._fh.createWritable(); await w.write(html); await w.close();
+      const h = await _pickFileHandle('task-board.html');   // 파일 위치 기억(첫 선택 후 폴더 안 찾음)
+      const w = await h.createWritable(); await w.write(html); await w.close();
       render(); _toast('파일에 저장됨 ✓ — 다음에 열어도 유지됩니다'); return;
     } catch(err){ if (err.name === 'AbortError') return; }   // 사용자가 피커 취소
   }
