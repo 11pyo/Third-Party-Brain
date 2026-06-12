@@ -42,6 +42,13 @@
   .detail { display:none; margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;
             font-size:12px; line-height:1.7; white-space:pre-wrap; }
   .card.open .detail { display:block; }
+  /* ── 🤖 AI 참조 로그 (접힘) — 사람은 본문까지만 / AI context log (collapsed) — humans read the body above, AI reads this too ── */
+  .detail details.ailog { margin-top:10px; border-top:1px dashed #cbd5e1; padding-top:7px; white-space:normal; }
+  .detail details.ailog summary { cursor:pointer; font-size:11px; font-weight:700; color:#64748b; user-select:none; }
+  .detail details.ailog summary:hover { color:#334155; }
+  .detail details.ailog summary .sub { font-weight:400; color:#94a3b8; }
+  .detail details.ailog .ailog-body { margin-top:6px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:7px;
+        padding:8px 10px; font-size:11.5px; line-height:1.65; color:#475569; max-height:420px; overflow:auto; white-space:pre-wrap; }
   .hint { text-align:center; font-size:11px; color:#94a3b8; padding:0 0 18px; }
   a { color:#2563eb; }
   /* ── 카드 편집 기능 ── */
@@ -193,10 +200,15 @@ const TASKS = [
     req:'영업팀 A매니저', due:'요청 2026-06-01',
     next:'개발·테스트 완료, 이관 승인 대기 → 승인 후 운영 반영', warn:false,
     detail:
-`[요청] 기존 리포트 화면에 단가 컬럼 1개 추가.
-[설계] 표시옵션 체크박스로 show/hide 독립 제어. 데이터는 항상 로드, 표시만 토글.
-[교훈(샘플)] 개발=개발 클라이언트 / 테스트=테스트 클라이언트로 분리. 메인 활성화 ≠ 인클루드 활성화.
-[상태] 단위테스트 통과. 이관(전송요청) 승인 대기.` },
+`[무엇] 기존 리포트 화면에 단가 컬럼 1개 추가 (표시옵션 체크박스로 show/hide 독립 제어).
+[상태] 단위테스트 통과. 이관(전송요청) 승인 대기 → 승인 후 운영 반영.
+※ 본문은 사람용 요약 — 시계열·교훈은 아래 🤖 AI 참조 로그(접힘)에.`,
+    ailog:
+`[샘플] 시계열 작업로그·교훈·AI 방침은 여기에 쌓는다 — AI는 카드 참조 시 여기까지 정독, 사람은 위 본문만 읽어도 됨.
+2026-06-01 스펙 확정 — 단가 필드는 라벨이 아니라 실데이터로 검증해 선정.
+2026-06-02 개발 클라이언트에서 빌드·활성화. 함정: 메인 프로그램 활성화 ≠ 인클루드 활성화(별도 확인 필요).
+2026-06-03 데이터는 항상 로드, 표시만 토글로 설계 확정(성능 영향 없음).
+[AI 방침] 변경은 append-only — 기존 로직 수정 금지. 표시 토글은 데이터 fetch와 분리 유지.` },
 
   { id:'DEV-002', cls:'dev', status:'대기',
     title:'외부 시스템 ↔ ERP 데이터 연계 (인계 조사)',
@@ -353,7 +365,15 @@ function viewHTML(t){
       `<div class="meta">${dueLabel}: ${esc(t.due)}</div>` +
       `<div class="next ${t.warn?'warn':''}">▶ ${esc(t.next)}</div>` +
     `</div>` +
-    `<div class="detail">${esc(t.detail)}</div>`;
+    `<div class="detail">${esc(t.detail)}${ailogHTML(t)}</div>`;
+}
+// 🤖 AI 참조 로그 — 시계열 작업로그·AI 방침을 본문 아래 접힘 영역으로. 사람은 본문까지만 읽고,
+// AI 세션은 카드 참조 시 이 로그까지 반드시 정독한다(정확한 문맥 유지·요약 금지).
+// AI context log: humans read the curated body; AI assistants must also read this collapsed
+// time-series (work log, lessons, AI policies) for full context. Empty → not rendered.
+function ailogHTML(t){
+  if (!t.ailog) return '';
+  return `<details class="ailog"><summary>🤖 AI 참조 로그 <span class="sub">— 시계열 작업로그·AI 방침 (사람은 위 본문까지만 읽어도 됩니다 / humans can skip)</span></summary><div class="ailog-body">${esc(t.ailog)}</div></details>`;
 }
 
 function openEdit(card, t){
@@ -362,7 +382,7 @@ function openEdit(card, t){
   const firstField = isR
     ? `<label>주기 <select name="cadence">${['주례','월례','연례'].map(s=>`<option ${s===t.cadence?'selected':''}>${s}</option>`).join('')}</select></label>`
     : `<label>상태 <select name="status">${STATUSES.map(s=>`<option ${s===t.status?'selected':''}>${s}</option>`).join('')}</select></label>`;
-  const fields = isR ? ['cadence','title','req','due','next','detail'] : ['status','title','req','due','next','detail'];
+  const fields = isR ? ['cadence','title','req','due','next','detail','ailog'] : ['status','title','req','due','next','detail','ailog'];
   card.innerHTML =
     `<div class="editform">` +
       `<div class="id">${esc(t.id)} 수정${isR?' (정기업무)':''}</div>` +
@@ -371,7 +391,8 @@ function openEdit(card, t){
       `<label>요청 <input name="req" value="${escAttr(t.req)}"></label>` +
       `<label>${isR?'주기/다음':'기한'} <input name="due" value="${escAttr(t.due)}"></label>` +
       `<label>다음 액션 <input name="next" value="${escAttr(t.next)}"></label>` +
-      `<label>상세 <textarea name="detail" rows="9">${esc(t.detail)}</textarea></label>` +
+      `<label>상세 (본문 — 사람용 정리) <textarea name="detail" rows="9">${esc(t.detail)}</textarea></label>` +
+      `<label>🤖 AI 참조 로그 (접힘 영역 — 시계열·교훈·AI 방침) <textarea name="ailog" rows="7">${esc(t.ailog || '')}</textarea></label>` +
       `<div class="ebtns">` +
         `<button class="save">저장</button>` +
         `<button class="cancel">취소</button>` +

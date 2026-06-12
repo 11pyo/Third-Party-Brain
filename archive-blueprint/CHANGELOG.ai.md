@@ -3,13 +3,25 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-06-10
+last_updated: 2026-06-12
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
 # CHANGELOG (프로그램·알고리즘·구조)
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
+
+## 2026-06-12
+- `[STRUCTURE]` **대시보드 카드 2층 구조 — 🤖 AI 참조 로그(접힘) 신설.** 대형 개발 카드의 시계열 로그(수정·교훈·AI 방침)가 본문 가독성을 해치는데 AI 문맥 보존 때문에 줄일 수 없는 문제 → 카드 = **본문(`detail`·사람용 현재형 정리) + 접힘 `ailog`(`<details>`·AI용 시계열 전문)** 분리. 렌더(미러=`viewHTML`+`ailogHTML` / 단독레포=카드템플릿+`ce("ailog")` contenteditable)·편집(미러=textarea 필드 / 단독=blur→모델 기록)·저장(TASKS 리터럴 직렬화에 자동 포함) 전 경로 지원. 읽기 규약 = **AI는 본문+ailog 둘 다 정독 필수, 사람은 본문까지만**(AGENTS.md·README 명문화). `ailog` 없는 기존 카드는 변화 없음(하위호환).
+  - 영향: `reference-implementation/dashboard/task-board.html`(CSS·ailogHTML·fields·textarea·DEV-001 샘플 ailog)·`README.md`, (별도 레포)`ai-collab-dashboard/task-board.html`·`README.md`·`README.en.md`·`AGENTS.md`·`CHANGELOG.md`(신설). 사내 원본: task-board.html 동일 적용 + tasks.md `### 🤖 AI 참조 로그` 섹션 규약 + 프로젝트 CLAUDE.md 착수규칙(카드 2층 구조 정독).
+  - 검증: 헤드리스 3보드(사내·단독·미러) — 기본접힘·펼침·편집필드·blur저장(단독)·직렬화 regex·console 0. 사내 DEV-003 기준 본문 698자/AI로그 8,843자 분리(전문 보존·손실 0).
+  - 이유: 실사용 페인포인트 — "요약하고 싶어도 AI가 정확한 문맥을 읽어야 해서 줄일 수 없다" → 사람 화면은 짧게, AI 문맥은 전부, 동시에.
+
+## 2026-06-11
+- `[STRUCTURE]` **아티클 접기/펴기(collapse) 토글 추가 — 긴 트러블슈팅·구버전 아티클 가시성.** 단일 HTML 아카이브가 길어지며(70아티클) 긴 트러블슈팅·구버전이 스크롤을 잡아먹는 문제 → 아티클 헤더(`.ah`) 클릭으로 본문 접기/펴기. **구현**: ① CSS — `.article.collapsed > *:not(.ah){display:none}`(헤더만 남김) · `.ah::before` 쉐브론(▾/▸, DOM 주입 0) · 접힘 제목 1줄 말줄임(`white-space:nowrap`+ellipsis) · `.article.old`(구버전 흐림+'· 구버전') · `#fold-all` 버튼. ② JS(IIFE) — 기본 접힘 규칙(`.badge.b-트러블`·`.badge.b-매뉴얼` 카테고리 OR `.old`) · 헤더 클릭 위임 토글(편집모드·본문 링크 제외) · 사용자 선택 `localStorage('archive-fold')` 기억 · `window.foldAll`(검색바 「⊟ 전체 접기/펴기」). ③ 검색 연동 — `doSearch`가 `body.searching` 토글 → 검색 중엔 접힘 무시 본문 노출(매칭은 `textContent`라 접혀도 검색됨). ④ 저장 청결 — `saveFile`이 transient 뷰 클래스(`.collapsed`·`body.searching`) 제거(기존 `.article.hidden` 제거 패턴과 동일, `.old`는 authored이라 보존).
+  - 영향: 정본(비공개) `archive.html`(CSS ~15줄·검색바 버튼·JS IIFE·`doSearch`/`saveFile` 각 1~2줄). 코어 도구(`archive-server.py`/`archive-intake.py`/`archive-menu.py`) 불변. 공개 `reference-implementation/archive/archive.html` 동일 패턴 이식은 후속(미적용).
+  - 검증: 헤드리스 preview(`python -m http.server`, localhost:8788) — 70아티클 중 트러블슈팅 21+운영 매뉴얼 11=32개 기본 접힘·기초/프로세스/기술 0·헤더클릭 토글 양방향(collapsed↔expanded)·접힘 본문 computed `display:none`·검색('VL09') 시 매칭 5건 본문 `flex` 노출+`.collapsed` 클래스 보존·검색해제 시 재접힘·편집모드 헤더클릭 시 토글 안 됨(제목 contenteditable)·`foldAll` 전체접기70/전체펴기0·console error 0.
+  - 이유: 사용자 요청("긴 트러블슈팅·과거로 밀려난 옛버전은 접었다 폈다 토글로"). 단일 HTML·서버리스 원칙(INV1) 유지 — 순수 CSS+클라이언트 JS, 검색 텍스트(콘텐츠) 보존.
 
 ## 2026-06-10
 - `[DEPLOY]` **file:// 저장 안내 정정 — 원본 직접쓰기는 localhost/https 전용, file://은 다운로드뿐.** 실사용 보고: `file:///…/archive.html`(더블클릭)에서 💾 후 새로고침 시 경고 배너, 원본 미반영. 디스크 증거: 저장 시각 이후 C:프로필+D: 전체에 수정된 html 0건(원본 mtime=직전 편집 그대로) = file://에선 **쓰기가 어디에도 안 됨**. 원인: File System Access(`showSaveFilePicker`/`createWritable`)는 **opaque origin인 file://에서 불가** → 다운로드 폴백뿐(그 다운로드도 OS Save-As 취소 시 무파일). 종전 인앱 문구가 "더블클릭이 가장 깔끔"·"Chrome·Edge는 파일에 바로 저장"이라 **오해 유발**. 수정: 로드 시 `!showSaveFilePicker || location.protocol==='file:'`이면 💾버튼을 **"💾 다운로드"** 로 재라벨 + 힌트에 **"원본 바로저장은 `http://localhost`(로컬 서버)로 열라"** 명시(아카이브 검색서버 `archive-server.py`가 이미 localhost:5174 제공).
