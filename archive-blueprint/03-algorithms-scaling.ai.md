@@ -1,8 +1,8 @@
 ---
 doc_type: ai_reference
 topic: search_intake_algorithms_and_scaling_thresholds
-version: 1.2
-last_updated: 2026-06-05
+version: 1.3
+last_updated: 2026-06-24
 critical: "이 문서는 규모(N=아티클 수)에 따라 알고리즘을 언제 바꿔야 하는지 정의한다. 재구축/확장 시 필수 참조."
 ---
 
@@ -37,6 +37,21 @@ critical: "이 문서는 규모(N=아티클 수)에 따라 알고리즘을 언�
 5. suggest_category(CATEGORY_SIGNALS): 시그널 키워드 카운트
 6. 판정: NEW(0히트) / UPDATE(1아티클) / REVIEW(2+) / CONFLICT
 ```
+
+## B2. 링크·backlink 렌더 알고리즘 (archive.html 인라인 JS, data-related) — 2026-06-24
+```
+0. 메타: 각 article에 data-related="id id ..."(# 없는 공백구분 아티클 id). 본문 무손상·속성만 추가.
+   동반 메타 data-cat/data-topics/data-updated(현 렌더 미소비, 향후 필터용). 통제어휘=META_TAG_SCHEMA(원본폴더).
+1. DOMContentLoaded: article.article 수집 → byId 맵 + back(역참조) 인덱스 1회 구축
+   (data-related를 역방향 뒤집어 backlink 무료 생성 — 한쪽만 적어도 양방향).
+2. 각 아티클 하단 .rel-panel(data-noexport) 동적 append: 「🔗 관련」=fwd(자기 data-related),
+   「↩ 여기를 참조」=bk(나를 가리키는 글, fwd와 중복 제외). 둘 다 없으면 패널 생략.
+3. 클릭 위임(document): .rel-chip→대상 scrollIntoView+collapsed 해제 / .tags .tag→search-input에
+   태그텍스트 주입 후 doSearch()+scrollTop. body.editing이면 무시(제목 편집 우선).
+4. 단일출처: 연결 정본=data-related 속성뿐. 패널은 render-only → saveFile의 [data-noexport] strip이
+   자동 제거(저장오염 0). id=불변키(제목 변경에도 링크 불파손).
+```
+**설계의도**: 검색(BM25=쿼리→문서, 섹션 A)과 **직교하는 탐색축**(문서→인접문서) 보강. Obsidian 양방향링크 패턴의 앱-프리 흡수. **커버리지**: 큐레이션 핵심 클러스터에만 부여(전수금지=AI 검색 노이즈 가드레일). 현 정본 15아티클(여신/세금/반품/취소 허브), 공개샘플 데모 4아티클(라벨 EN). 코어 검색·인테이크 불변. 포지셔닝 상세=`COMPARISON-llm-wiki`(PKM/Obsidian).
 
 ## C. 스케일링 임계점 — **언제 무엇을 바꾸나** (핵심)
 | 규모 N | 검색 방식 | 인테이크 | 인덱스 | 변경 트리거 / 신호 |

@@ -196,7 +196,7 @@ body.editing #edit-hint { display: block; }
 <!-- ══════════════ 프로세스 ══════════════ -->
 <div class="cat-header"><h2>🔄 프로세스 (Process)</h2><span class="cnt">2</span></div>
 
-<article class="article" id="base-order-flow" data-tags="판매오더 처리 흐름 출고 빌링 세금계산서 프로세스 sample ZSD025 ZSD010">
+<article class="article" id="base-order-flow" data-related="proc-sales-cancel ts-tax-invoice ts-credit-check" data-tags="판매오더 처리 흐름 출고 빌링 세금계산서 프로세스 sample ZSD025 ZSD010">
   <div class="ah">
     <div class="at">표준 판매오더 처리 흐름</div>
     <span class="badge b-프로세스">프로세스</span>
@@ -215,7 +215,7 @@ body.editing #edit-hint { display: block; }
   </div>
 </article>
 
-<article class="article" id="proc-sales-cancel" data-tags="매출 취소 프로세스 빌링취소 세금계산서 ZSD030 VF11 VL09 순서 프로세스 sample">
+<article class="article" id="proc-sales-cancel" data-related="base-order-flow ts-tax-invoice month-end-closing" data-tags="매출 취소 프로세스 빌링취소 세금계산서 ZSD030 VF11 VL09 순서 프로세스 sample">
   <div class="ah">
     <div class="at">매출 취소 프로세스</div>
     <span class="badge b-프로세스">프로세스</span>
@@ -252,7 +252,7 @@ body.editing #edit-hint { display: block; }
 <!-- ══════════════ 트러블슈팅 ══════════════ -->
 <div class="cat-header"><h2>🔧 트러블슈팅 (Troubleshooting)</h2><span class="cnt">2</span></div>
 
-<article class="article" id="ts-tax-invoice" data-tags="세금계산서 수정 재발행 오류 마이너스 정정 ZSD010 트러블슈팅 sample">
+<article class="article" id="ts-tax-invoice" data-related="proc-sales-cancel base-order-flow" data-tags="세금계산서 수정 재발행 오류 마이너스 정정 ZSD010 트러블슈팅 sample">
   <div class="ah">
     <div class="at">세금계산서 수정·재발행</div>
     <span class="badge b-트러블">트러블슈팅</span>
@@ -268,7 +268,7 @@ body.editing #edit-hint { display: block; }
   </div>
 </article>
 
-<article class="article" id="ts-credit-check" data-tags="여신 점검 매출환산가치 한도 노출액 Credit BLOCK FD32 VKM4 ZTSD071 트러블슈팅 sample">
+<article class="article" id="ts-credit-check" data-related="ztsd-tables tcode-master base-order-flow" data-tags="여신 점검 매출환산가치 한도 노출액 Credit BLOCK FD32 VKM4 ZTSD071 트러블슈팅 sample">
   <div class="ah">
     <div class="at">여신 점검 / 매출환산가치</div>
     <span class="badge b-트러블">트러블슈팅</span>
@@ -510,5 +510,50 @@ document.addEventListener('DOMContentLoaded', ()=>{
   </div>
 </div>
 
+<!-- ── Obsidian-pattern backlink panel + tag-chip filter (visualizes data-related / tags) — 2026-06-24 ── -->
+<style>
+.rel-panel{margin-top:14px;padding:9px 12px;border-top:1px dashed #cbd5e1;background:#f8fafc;border-radius:0 0 6px 6px;font-size:.8rem}
+.rel-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:3px 0}
+.rel-lbl{color:#64748b;font-weight:700;font-size:.72rem;margin-right:4px;white-space:nowrap}
+.rel-chip{display:inline-block;padding:2px 9px;background:#e0e7ff;color:#3730a3;text-decoration:none;font-size:.75rem;border:1px solid #c7d2fe;border-radius:11px;cursor:pointer}
+.rel-chip:hover{background:#c7d2fe}
+.tags .tag{cursor:pointer}
+.tags .tag:hover{filter:brightness(.95)}
+.collapsed .rel-panel{display:none}
+</style>
+<script>
+// Render data-related (inter-article links) as an on-screen backlink panel, and make tags click-to-filter.
+// Panels are rendered dynamically (data-noexport = stripped on save) — the source of truth is each article's data-related attribute.
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var arts = [].slice.call(document.querySelectorAll('article.article'));
+    var byId = {}; arts.forEach(function(a){ if(a.id) byId[a.id]=a; });
+    var back = {};
+    arts.forEach(function(a){
+      var rel=(a.dataset.related||'').trim(); if(!rel) return;
+      rel.split(/\s+/).forEach(function(t){ (back[t]=back[t]||[]).push(a.id); });
+    });
+    function title(id){ var a=byId[id]; var t=a&&a.querySelector('.at'); return t?t.textContent:id; }
+    function chip(id){ return byId[id] ? '<a href="#'+id+'" class="rel-chip" data-goto="'+id+'">'+title(id)+'</a>' : ''; }
+    arts.forEach(function(a){
+      var fwd=(a.dataset.related||'').trim().split(/\s+/).filter(function(x){return x&&byId[x];});
+      var bk=(back[a.id]||[]).filter(function(x){return byId[x] && fwd.indexOf(x)<0;});
+      if(!fwd.length && !bk.length) return;
+      var p=document.createElement('div'); p.className='rel-panel'; p.setAttribute('data-noexport','');
+      var h='';
+      if(fwd.length) h+='<div class="rel-row"><span class="rel-lbl">🔗 Related</span>'+fwd.map(chip).join('')+'</div>';
+      if(bk.length)  h+='<div class="rel-row"><span class="rel-lbl">↩ Referenced by</span>'+bk.map(chip).join('')+'</div>';
+      p.innerHTML=h; a.appendChild(p);
+    });
+    document.addEventListener('click', function(e){
+      if(document.body.classList.contains('editing')) return;
+      var c=e.target.closest('.rel-chip');
+      if(c){ e.preventDefault(); var t=byId[c.getAttribute('data-goto')]; if(t){ t.classList.remove('collapsed'); t.scrollIntoView({behavior:'smooth',block:'start'}); } return; }
+      var tag=e.target.closest('.tags .tag');
+      if(tag){ e.preventDefault(); var inp=document.getElementById('search-input'); if(inp){ inp.value=tag.textContent.replace(/^#/,'').trim(); if(typeof doSearch==='function') doSearch(); window.scrollTo({top:0,behavior:'smooth'}); } }
+    });
+  });
+})();
+</script>
 </body>
 </html>

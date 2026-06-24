@@ -3,8 +3,8 @@ doc_type: ai_reference
 audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
-version: 1.9
-last_updated: 2026-06-11
+version: 2.0
+last_updated: 2026-06-24
 read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
 governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 블루프린트 동기화 + CHANGELOG 기록 의무 (아래 MANDATORY SYNC 참조)"

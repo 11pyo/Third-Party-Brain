@@ -11,6 +11,13 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
+## 2026-06-24
+- `[STRUCTURE]` **Obsidian 패턴 융합 — 양방향 링크(data-related) + backlink 패널 + 태그칩 필터(앱-프리).** 각 article에 `data-related="id ..."` 속성 추가(본문 무손상) → archive.html 인라인 IIFE가 byId+back(역참조) 인덱스 구축 후 하단 `.rel-panel`(`data-noexport`) 렌더: 「🔗 관련」(fwd)+「↩ 여기를 참조」(bk, 한쪽만 적어도 양방향 자동). 클릭위임: rel-chip→scrollIntoView+un-collapse / `.tags .tag`→search-input 주입+doSearch(); `body.editing` 가드. 연결 정본=`data-related` 속성 단일출처, 패널 render-only→saveFile `[data-noexport]` strip이 제거(저장오염 0), id=불변키. 검색(BM25)과 직교하는 탐색축 보강.
+  - 영향: 정본 `archive.html`(인라인 `<style>`+`<script>` 1블록, 핵심 15아티클 `data-related`/`data-cat`)·원본폴더 신규 `META_TAG_SCHEMA.md`(통제 태그어휘·메타필드·효율 가드레일). 공개 `reference-implementation/archive/archive.html` 동일 블록 이식(라벨 EN, 데모 4아티클). 코어 도구(`archive-server.py`/`archive-intake.py`/`archive-menu.py`)·BM25 검색·인테이크 불변.
+  - 검증: 셀렉터(`.at`/`#search-input`/`doSearch`/`body.editing`/`data-noexport`) 실파일 대조 일치 + ES5 정적분석. `data-related` 카운트 정본 15. 브라우저 렌더 육안=사용자 위임.
+  - 커버리지 가드레일: 링크는 큐레이션 핵심 클러스터 한정(전수부여 금지 — AI 검색 노이즈 방지). 메타 5필드(cat/topics/related/updated/tags) 초과 금지.
+  - 이유: 사용자 요청(Obsidian 장점 흡수·효율 비저하·앱 미도입). 관련: `03-algorithms-scaling`(링크·backlink 알고리즘 절), `COMPARISON-llm-wiki`(PKM 포지셔닝).
+
 ## 2026-06-12
 - `[STRUCTURE]` **대시보드 카드 2층 구조 — 🤖 AI 참조 로그(접힘) 신설.** 대형 개발 카드의 시계열 로그(수정·교훈·AI 방침)가 본문 가독성을 해치는데 AI 문맥 보존 때문에 줄일 수 없는 문제 → 카드 = **본문(`detail`·사람용 현재형 정리) + 접힘 `ailog`(`<details>`·AI용 시계열 전문)** 분리. 렌더(미러=`viewHTML`+`ailogHTML` / 단독레포=카드템플릿+`ce("ailog")` contenteditable)·편집(미러=textarea 필드 / 단독=blur→모델 기록)·저장(TASKS 리터럴 직렬화에 자동 포함) 전 경로 지원. 읽기 규약 = **AI는 본문+ailog 둘 다 정독 필수, 사람은 본문까지만**(AGENTS.md·README 명문화). `ailog` 없는 기존 카드는 변화 없음(하위호환).
   - 영향: `reference-implementation/dashboard/task-board.html`(CSS·ailogHTML·fields·textarea·DEV-001 샘플 ailog)·`README.md`, (별도 레포)`ai-collab-dashboard/task-board.html`·`README.md`·`README.en.md`·`AGENTS.md`·`CHANGELOG.md`(신설). 사내 원본: task-board.html 동일 적용 + tasks.md `### 🤖 AI 참조 로그` 섹션 규약 + 프로젝트 CLAUDE.md 착수규칙(카드 2층 구조 정독).
