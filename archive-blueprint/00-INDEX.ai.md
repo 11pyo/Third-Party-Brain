@@ -47,7 +47,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 | `archive-structure.md` | 경량 인덱스 (세션마다 전체 HTML 안 읽도록) | id·제목·라인·카운트 |
 | `archive-intake.py` | 신규 정보 인테이크 — 중복·충돌·배치 자동 판별 CLI | 동의어확장·충돌패턴·카테고리분류 |
 | `archive-menu.py` | 계층형 대화 메뉴 (검색/인테이크/현황/참조) | TUI |
-| `archive-server.py` | 로컬 AI 검색 서버 (claude CLI 연동, BM25 랭킹) | API 키 불요. rank_bm25 의존(미설치 시 term-count fallback). `--share`로 LAN 공유. 개인=127.0.0.1, 공유=0.0.0.0 바인딩 |
+| `archive-server.py` | 로컬 AI 검색 서버 (Claude API 우선+CLI 폴백 이중경로, BM25 랭킹) | 기본=API 키 불요(claude -p CLI). `ANTHROPIC_API_KEY`(env 또는 로컬 전용 키파일) 설정 시 API 직접호출로 더 빠르게 동작, 실패/미설정 시 자동 CLI 폴백(`ARCHIVE_SERVER_FORCE_CLI=1`로 CLI 강제 가능). rank_bm25 의존(미설치 시 term-count fallback). `--share`로 LAN 공유. 개인=127.0.0.1, 공유=0.0.0.0 바인딩 |
 | `1_서버_개인모드.bat` | 개인 모드 기동 (localhost) | CP949 인코딩 / 더블클릭 실행 |
 | `2_서버_공유모드.bat` | 공유 모드 기동 (`--share`) | 콘솔에 LAN 링크·방화벽 안내 표시 |
 | `3_종료_개인모드.bat` | 개인 모드만 종료 (127.0.0.1:5174) | netstat→taskkill |
@@ -67,7 +67,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 - INV3: 아티클 추가/삭제 시 3곳 동기화 — ① 사이드바 nav ② 카테고리 카운트 ③ `archive-structure.md`.
 - INV4: 민감정보(비밀번호·IP·인증서·계정) 아카이브 저장 금지.
 - INV5: 인테이크 전 중복·충돌 검사 (`archive-intake.py`).
-- INV6: AI 검색은 로컬 `claude -p` 사용 → API 키 불필요, 데이터 외부 유출 없음.
+- INV6: AI 검색은 기본적으로 로컬 `claude -p` 사용(API 키 불필요) — 사용자가 `ANTHROPIC_API_KEY`를 설정하면 Claude API 직접호출로 전환 가능(선택적, 그 경우 별도 API 과금 발생). 두 경로 모두 결국 Anthropic 서비스로 요청이 나감(로컬 완결 처리가 아님) — "외부 유출 없음"은 "제3의 서비스·별도 계정 불필요"라는 뜻이지 오프라인 처리를 의미하지 않음.
 - INV7: **인코딩** — 텍스트/HTML/파이썬 = UTF-8. **Windows 배치(.bat) = CP949 인코딩 + `>nul`/`>/dev/null` 등 리다이렉션 미사용**(린터가 `>/dev/null`로 변형해 cmd에서 깨짐). 파이썬 콘솔 출력은 stdout UTF-8 wrap, cmd 경유 출력은 `chcp 65001` + UTF-8/CP949 폴백 디코드. 한글을 CLI argv로 직접 전달 금지(임시파일/stdin 경유).
 - INV8: **블루프린트 동기화** — 프로그램·알고리즘·구조 변경 시 이 블루프린트 + CHANGELOG 동기화 (위 MANDATORY SYNC).
 - INV9: 프론트 fetch는 `window.location.origin` 상대경로 (하드코딩 localhost 금지 — LAN 공유 시 타 PC에서 깨짐).
@@ -76,4 +76,4 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 - N≤200 아티클: BM25(char-2gram) 인메모리 랭킹 (현재 방식) 충분.
 - N>200: 동의어맵 유지보수 부담 ↑ → 카테고리 인덱스 분리 검토.
 - N>500: 단일 HTML 로딩/검색 비용 ↑ → SQLite FTS5 백엔드로 이전.
-- N>1000 또는 의미검색 요구: 임베딩 기반 시맨틱 검색(벡터 인덱스)로 전환.
+- N>1000 또는 의미검색 요구: 임베딩 기반 시맨틱 검색(벡터 인덱스)로 전환 검토. ⚠️단, 실측(2026-07-24, N=96) 결과 범용 다국어 임베딩을 BM25와 대등 결합하면 오히려 R@1 악화(70%→50%) — 이 도메인(Z코드·전문용어 밀도 높은 짧은 글)엔 일반 임베딩이 부적합할 수 있음. 도입 전 자체 라벨셋으로 회귀 테스트 필수(상세: `03-algorithms-scaling.ai.md` §A-1).

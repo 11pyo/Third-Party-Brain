@@ -11,6 +11,24 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
+## 2026-07-24
+- `[ALGO]` **Claude 호출 이중경로 도입 — API 우선 + `claude -p` CLI 자동 폴백(지연시간 개선).** 종전엔 질의마다 `claude -p` 프로세스를 새로 spawn(Node CLI 콜드스타트 오버헤드)했음 → `anthropic` SDK로 Claude API를 직접 호출하는 경로를 1순위로 추가, 키 미설정/호출 실패/빈 응답 시에는 기존 CLI 경로로 자동 폴백(사용자 체감상 오류 없이 계속 동작). 시스템 프롬프트(고정 지침)를 질의별 가변 컨텍스트에서 분리해 `cache_control: ephemeral`로 표시(단, 실측상 이 시스템프롬프트는 프롬프트캐싱 최소 토큰 문턱보다 짧아 실제 캐시 적중은 기대하지 않음 — 지연시간 개선의 핵심은 캐싱이 아니라 CLI 프로세스 스폰 자체를 없애는 것). API 키는 환경변수(`ANTHROPIC_API_KEY`) 또는 LAN 공유 archive 폴더 **밖**의 로컬 전용 키파일에서 읽음(공유본에 자격증명 금지 원칙 준수). `ARCHIVE_SERVER_FORCE_CLI=1`로 CLI 강제 가능.
+  - 영향: `archive-server.py`(`SYSTEM_PROMPT`/`build_user_content`/`call_claude_api`/`call_claude_cli`/`call_claude` 신설·`build_prompt`+구 단일인자 `call_claude` 제거), `.claude/launch.json`(archive-ai-server 프리뷰 설정 추가). 검색 랭킹(BM25) 로직은 무변경.
+  - 검증: `_get_anthropic_client()`가 키 미설정 시 `None`(정상 폴백 확인), 실제 `claude -p` 왕복 1회(10.9초, CLI 자체는 정상 동작 확인 — 다만 이 세션에서 OAuth 토큰 만료로 답변 내용 자체는 인증 오류; 코드 경로는 정상).
+  - 이유: 사용자 요청("성능 개선 + 필요시 claude -p 스폰 가능하게").
+- `[ALGO]` **하이브리드 임베딩 검색 — 시도 후 폐기(실측 근거로 기각).** BM25(char-2gram)에 범용 다국어 임베딩(sentence-transformers, paraphrase-multilingual-MiniLM-L12-v2)을 결합해보면 동의어사전에 없는 표현도 잡을 것이라는 가설으로 시도. 실측(N=96, 라벨 20질의): BM25 단독 R@1 70.0% → BM25+임베딩 대등 RRF 융합 R@1 **50.0%로 악화**. "BM25가 못 찾을 때만" 임베딩이 보강하는 안전한 버전(rescue-only)도 시도했으나, 이 코퍼스의 BM25Okapi가 완전 무관한 질의(외계어·숫자나열)에도 96개 중 90개+ 문서에 양수 점수를 주는 특성이 있어 "BM25가 못 찾은 경우"가 사실상 발생하지 않아 **도달 불가능한 죽은 코드**였음. → 임베딩 레이어를 완전히 제거하고 순수 BM25만 유지(회귀 0, 기준선과 동일 70.0%/75.0% 재확인).
+  - 영향: `archive-server.py`(임베딩 관련 함수·전역·의존성 추가 후 전부 제거 — 최종 diff는 BM25 랭킹 무변경), `_tmp/_eval_retrieval.py`(신설 — 20질의 회귀테스트 스크립트, 향후 검색로직 변경 시 재사용).
+  - 검증: 동일 20질의셋으로 BM25단독(70.0%/75.0%) → 대등융합(50.0%/55.0%, 악화 확인) → rescue-only(70.0%/75.0%, 회귀 0이지만 rescue 미발동 확인: gibberish 질의도 96개 중 90개+ 양수점수) → 순수 BM25 복원 후 재확인(70.0%/75.0%, 리버트 전과 100% 동일 결과).
+  - 이유: 사용자 요청("검색 정확도 개선")에 대한 실측 기반 의사결정 — 제안했던 개선안이 실제로는 역효과임을 확인하고 정직하게 반영. 관련: `03-algorithms-scaling.ai.md` §A-1(상세 실측·재도전 조건).
+- `[STRUCTURE]` **AI 패널 멀티턴 대화 맥락 추가.** 종전엔 브라우저 위젯의 질의마다 완전 무상태(stateless)라 "그거 T코드가 뭐야?" 같은 후속질문이 안 먹혔음(Claude Code CLI 세션과 달리 이 위젯은 별도의 독립 채널이라 자체 맥락 유지가 없었음). 프런트 JS가 최근 3턴(6메시지)을 `conversationHistory`에 유지해 `/query` 요청에 함께 전송, 서버는 history를 생성 프롬프트(API 경로는 실제 messages 배열, CLI 경로는 직렬화된 텍스트)에만 반영하고 **검색 랭킹(BM25 키워드추출)에는 반영하지 않음**(실측 튜닝된 검색 정확도 보존 목적, 회귀 방지). 서버측 세션 저장 없음 — 상태는 브라우저 탭 메모리에만(새로고침 시 초기화).
+  - 영향: `archive-server.py`(`do_POST`가 `history` 필드 파싱·검증·상한(6개) 적용, `AI_PANEL_HTML`의 JS `conversationHistory`/`sendQuery`).
+  - 검증: 서버측 프롬프트 조립 로직을 직접 호출해 히스토리 텍스트가 올바르게 삽입됨을 확인(별도 로그 참조).
+  - 이유: 사용자 지적("이거 대화맥락 유지 안 되는 거 아니냐") — 실제로 이 위젯은 Claude Code CLI 세션과 무관한 별도 채널이라 맥락이 없었음을 확인 후 추가.
+- `[ENCODING]` **서버 시작 로그 UnicodeEncodeError 수정 — stdout/stderr UTF-8 강제.** 위 Claude 호출경로 로그에 em dash(—)를 쓴 새 print문이 Windows CP949 콘솔에서 `UnicodeEncodeError`로 서버 기동 자체를 실패시킴(실측: `.claude/launch.json` 경유 기동 시 즉시 크래시). 수정: `if __name__=="__main__"` 최상단에서 `sys.stdout.reconfigure(encoding="utf-8")`/`sys.stderr.reconfigure(...)` 적용(실패해도 조용히 무시, 서비스엔 지장 없음). 기존 `--share` 배너의 박스문자(┌│└)도 같은 위험군이었으나 이번 수정으로 함께 방지됨.
+  - 영향: `archive-server.py`(상단 `import sys` 추가 + `__main__` 블록 인코딩 재설정 2줄).
+  - 검증: 재기동 후 정상 기동 확인(콘솔 한글·이모지·특수문자 출력 정상).
+  - 이유: 실사용 중 발견한 실제 크래시(내가 추가한 코드가 원인) — 즉시 수정.
+
 ## 2026-06-24
 - `[STRUCTURE]` **Obsidian 패턴 융합 — 양방향 링크(data-related) + backlink 패널 + 태그칩 필터(앱-프리).** 각 article에 `data-related="id ..."` 속성 추가(본문 무손상) → archive.html 인라인 IIFE가 byId+back(역참조) 인덱스 구축 후 하단 `.rel-panel`(`data-noexport`) 렌더: 「🔗 관련」(fwd)+「↩ 여기를 참조」(bk, 한쪽만 적어도 양방향 자동). 클릭위임: rel-chip→scrollIntoView+un-collapse / `.tags .tag`→search-input 주입+doSearch(); `body.editing` 가드. 연결 정본=`data-related` 속성 단일출처, 패널 render-only→saveFile `[data-noexport]` strip이 제거(저장오염 0), id=불변키. 검색(BM25)과 직교하는 탐색축 보강.
   - 영향: 정본 `archive.html`(인라인 `<style>`+`<script>` 1블록, 핵심 15아티클 `data-related`/`data-cat`)·원본폴더 신규 `META_TAG_SCHEMA.md`(통제 태그어휘·메타필드·효율 가드레일). 공개 `reference-implementation/archive/archive.html` 동일 블록 이식(라벨 EN, 데모 4아티클). 코어 도구(`archive-server.py`/`archive-intake.py`/`archive-menu.py`)·BM25 검색·인테이크 불변.

@@ -1,8 +1,8 @@
 ---
 doc_type: ai_reference
 topic: overview_architecture_techstack
-version: 1.0
-last_updated: 2026-05-29
+version: 1.1
+last_updated: 2026-07-24
 ---
 
 # OVERVIEW · ARCHITECTURE · TECH STACK
@@ -18,21 +18,22 @@ last_updated: 2026-05-29
       │ 참조
       │
 ┌─────┴───────────────────────────────────┐
-│  Python 도구 계층 (stdlib만, 외부 의존성 0) │
+│  Python 도구 계층 (stdlib 우선 + 선택적 pip) │
 │  - archive-intake.py  : 인테이크 판별 CLI    │
 │  - archive-menu.py    : 계층형 TUI          │
 │  - archive-server.py  : 로컬 AI 검색 HTTP 서버│
 └─────────────────────────────────────────┘
       │
-      │ subprocess: claude -p - (stdin)
+      │ ① API 키 있으면: anthropic SDK 직접 호출(더 빠름, prompt caching)
+      │ ② 키 없거나 ①실패: subprocess: claude -p - (stdin) 로 자동 폴백
       ▼
-[Claude Code CLI]  ── 로컬 세션 인증, API 키 불요
+[Claude API 또는 Claude Code CLI]  ── ①은 API 키 필요·과금, ②는 로컬 세션 인증·API 키 불요
 ```
 
 ## TECH STACK (의도적으로 최소)
 - 데이터/프론트: **순수 HTML5 + 인라인 CSS + 바닐라 JS**. 빌드 스텝 없음. 프레임워크 없음.
-- 도구: **Python 3 stdlib만** (`re`, `http.server`, `subprocess`, `json`, `pathlib`, `socket`). pip 설치 0.
-- AI: **Claude Code CLI** (`claude -p`), 로컬 로그인 세션 재사용.
+- 도구: **Python 3 stdlib 우선** (`re`, `http.server`, `subprocess`, `json`, `pathlib`, `socket`). 검색 랭킹 고도화(`rank_bm25`)와 API 직접호출(`anthropic`)은 선택적 pip 패키지 — 미설치 시 각각 term-count 스코어링·claude -p CLI로 graceful fallback(필수 아님).
+- AI: **Claude API 직접호출(anthropic SDK) 우선 + Claude Code CLI(`claude -p`) 폴백**. API 키 없거나 호출 실패 시 자동으로 CLI(로컬 로그인 세션 재사용)로 전환 — 사용자 체감상 항상 응답이 온다. 강제 CLI 전용 모드는 `ARCHIVE_SERVER_FORCE_CLI=1`.
 - 저장소: 파일시스템. DB 없음.
 - 인코딩 정책: 파일 UTF-8. Windows 콘솔 출력은 stdout을 UTF-8 wrap. cmd.exe 경유 출력은 `chcp 65001` 강제 + UTF-8/CP949 폴백 디코딩.
 
@@ -45,14 +46,18 @@ last_updated: 2026-05-29
 
 ## archive-server.py 내부 파이프라인
 ```
-POST /query {query}
-  → search_relevant(query)
-      → 키워드 추출(정규식) → expand_query(동의어맵) → 본문 정규식 히트 점수
-      → 제목/태그 히트 ×3 가중 → 짧은 ASCII코드는 단어경계 매칭 → top_n=3
-  → build_prompt(query, contexts)  ── 시스템 규칙 주입 (T-Code 표기법, 미보유 명시, 자동 스크롤 안내)
-  → call_claude(prompt)  ── 임시파일 UTF-8 저장 → `chcp 65001 && claude -p -` stdin 파이프
+POST /query {query, history[]}
+  → search_relevant(query)  ── BM25(char-2gram) 랭킹(history 미반영 — 검색 정확도 실측 보존)
+      → 키워드 추출(정규식) → expand_query(동의어맵, 발췌 단계에서만 사용)
+      → extract_passage top_n=3
+  → build_user_content(query, contexts)  ── 질의별 가변 부분(발췌+질문)만
+  → call_claude(query, contexts, history)  ── SYSTEM_PROMPT(고정 지침, 캐싱 대상)와 분리해 오케스트레이션:
+      ① FORCE_CLI 아니면 call_claude_api() 시도 — anthropic SDK, cache_control ephemeral
+      ② 키 없음/실패/빈응답 시 call_claude_cli() 폴백 — 임시파일 UTF-8 저장 →
+         `chcp 65001 && claude -p -` stdin 파이프(history는 텍스트로 직렬화해 프롬프트에 포함)
   → JSON {answer, sources[]}
-GET /  → archive.html + AI 패널(HTML/CSS/JS) 주입(</body> 직전)
+GET /  → archive.html + AI 패널(HTML/CSS/JS) 주입(</body> 직전) — 패널 JS가 최근 3턴(6메시지)을
+         conversationHistory에 유지해 후속질문에 맥락 전달(탭 새로고침 시 초기화, 서버측 세션 없음)
 ```
 - 프론트 패널: 우측 슬라이드 패널. `fetch(window.location.origin + '/query')`. 답변 후 첫 source로 `scrollToArticle()` 자동 스크롤 + 하이라이트 플래시.
 - LAN 공유: `--share` 플래그 → `0.0.0.0` 바인딩 → `http://{lan_ip}:5174`. 방화벽 규칙 안내 포함.
@@ -60,4 +65,4 @@ GET /  → archive.html + AI 패널(HTML/CSS/JS) 주입(</body> 직전)
 ## DESIGN RATIONALE
 - 단일 HTML: 이메일/USB/파일공유로 즉시 배포, 오프라인 동작, 버전관리 단순.
 - stdlib만: 인수인계 받는 비개발자도 `python x.py` 한 줄로 실행 가능.
-- 로컬 claude: 사내 데이터가 외부 API로 안 나감 + 비용 0.
+- 로컬 claude(CLI) 기본: 별도 API 키·과금 없이 즉시 동작. API 직접호출은 사용자가 명시적으로 키를 설정해야만 켜지는 선택적 고속 경로(그 경우 Anthropic API 과금 발생) — 기본값은 항상 무과금 CLI.
