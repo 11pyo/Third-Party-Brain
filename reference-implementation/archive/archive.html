@@ -307,12 +307,13 @@ body.editing #edit-hint { display: block; }
 <script>
 // Client-side filter — hides articles whose text/tags don't match the query.
 function doSearch() {
-  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const _raw = document.getElementById('search-input').value.trim().toLowerCase();
+  const q = (typeof window.normQ === 'function') ? window.normQ(_raw) : _raw;
   const arts = document.querySelectorAll('.article');
   let shown = 0;
   arts.forEach(a => {
     const hay = (a.textContent + ' ' + (a.getAttribute('data-tags') || '')).toLowerCase();
-    const hit = !q || hay.includes(q);
+    const hit = !q || (typeof window.matchQ === 'function' ? window.matchQ(hay, q) : hay.includes(q));
     a.classList.toggle('hidden', !hit);
     if (hit) shown++;
   });
@@ -553,6 +554,548 @@ document.addEventListener('DOMContentLoaded', ()=>{
       if(tag){ e.preventDefault(); var inp=document.getElementById('search-input'); if(inp){ inp.value=tag.textContent.replace(/^#/,'').trim(); if(typeof doSearch==='function') doSearch(); window.scrollTo({top:0,behavior:'smooth'}); } }
     });
   });
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════
+     탐색 층(Navigator) — 2026-08-20 추가
+     목적: 정본 파일(archive.html 한 벌)은 그대로 두고 "찾아 들어가는 보기 층"만 얹는다.
+       ① 🧭 색인(허브)  — T-Code / 테이블 / 케이스 / 주제 / 최근 역인덱스.
+                          파일에 저장하지 않고 로드할 때 DOM에서 매번 계산
+                          → 아티클을 추가·수정해도 자동 반영(사람이 동기화할 목록 0개).
+       ② 📄 문서 모드   — 사이드바·색인에서 고른 글 "한 편만" 표시. :target(URL 해시) 기반이라
+                          딥링크·뒤로가기가 그대로 동작.
+       ③ 📚 전체 모드   — 기존 롱페이지 동작 그대로(검색어를 넣으면 자동 전환).
+     불변 규칙(중요):
+       · 주입하는 DOM은 전부 data-noexport  → 💾저장본에 이 층의 흔적이 남지 않음
+       · 표시 상태는 body 클래스(mode-*)와 전용 클래스로만 표현 → 아티클 HTML 무손상
+       · 초기화가 실패해도 기존 보기(전체)로 그대로 동작 (try/catch)
+     ══════════════════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── 모드 스위치 (검색바 우측) ── */
+#nav-modes { display: flex; gap: 6px; margin-left: auto; }
+#nav-modes button { font: inherit; font-size: 12px; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+#nav-modes button:hover { background: #e2e8f0; border-color: #94a3b8; }
+#nav-modes button.on { background: #1a2744; border-color: #1a2744; color: #fff; }
+
+/* ── 사이드바: 색인 버튼 + 빠른 찾기 + 카테고리 접기 ── */
+#nav-side-top { position: sticky; top: 0; z-index: 5; background: #fff; padding: 9px 10px; border-bottom: 1px solid #e2e8f0; }
+#nav-hub-btn { width: 100%; font: inherit; font-size: 12px; font-weight: 700; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 8px; cursor: pointer; margin-bottom: 6px; }
+#nav-hub-btn:hover { background: #dbeafe; }
+#nav-filter { width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; font-size: 12px; outline: none; }
+#nav-filter:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #dbeafe; }
+.nav-cat-title { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+.nav-cat-title::before { content: '▾'; font-size: 9px; color: #94a3b8; }
+.nav-cat-title.nav-collapsed::before { content: '▸'; }
+.nav-cnt { margin-left: auto; background: #e2e8f0; color: #475569; border-radius: 10px; padding: 0 6px; font-size: 9.5px; font-weight: 700; }
+.nav-link.nav-hide, .nav-link.nav-f-hide, .nav-cat-title.nav-f-hide { display: none; }
+.nav-link.nav-on { background: #eff6ff; border-left-color: #1d4ed8; color: #1d4ed8; font-weight: 700; }
+
+/* ── 모드별 표시 규칙 (클래스를 아티클에 심지 않고 CSS로만 제어) ── */
+body.mode-hub #content .cat-header, body.mode-hub #content article.article { display: none !important; }
+body.mode-doc #content .cat-header { display: none !important; }
+body.mode-doc #content article.article:not(:target) { display: none !important; }
+body:not(.mode-hub) #nav-hub { display: none; }
+body:not(.mode-doc) #doc-bar { display: none; }
+body.mode-hub #fold-all, body.mode-doc #fold-all { display: none; }
+
+/* ── 문서 모드 상단 바 ── */
+#doc-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+#doc-bar button { font: inherit; font-size: 12px; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+#doc-bar button:hover:not(:disabled) { background: #e2e8f0; border-color: #94a3b8; }
+#doc-bar button:disabled { opacity: .4; cursor: default; }
+#doc-bar .db-crumb { font-size: 11.5px; color: #94a3b8; }
+#doc-bar .db-title { font-size: 12.5px; font-weight: 700; color: #1e293b; }
+#doc-bar .db-sp { margin-left: auto; display: flex; gap: 6px; }
+
+/* ── 허브(색인) ── */
+#nav-hub { max-width: 1180px; }
+.hub-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #1a2744; }
+.hub-h h2 { font-size: 16px; font-weight: 700; color: #1a2744; }
+.hub-h .sub { font-size: 11px; color: #94a3b8; }
+.hub-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.hub-tabs button { font: inherit; font-size: 12.5px; font-weight: 600; color: #475569; background: #fff; border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; cursor: pointer; }
+.hub-tabs button:hover { background: #f1f5f9; }
+.hub-tabs button.on { background: #1a2744; border-color: #1a2744; color: #fff; }
+#hub-filter { width: 340px; max-width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; font-size: 12.5px; outline: none; margin-bottom: 14px; }
+#hub-filter:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #dbeafe; }
+.hub-sec { margin-bottom: 16px; }
+.hub-fam { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0; }
+.hub-codes { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 6px; align-items: start; }
+details.hub-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 7px; }
+details.hub-item > summary { cursor: pointer; padding: 7px 10px; font-family: 'Consolas', monospace; font-weight: 700; font-size: 12.5px; color: #7c3aed; display: flex; align-items: center; gap: 6px; list-style: none; }
+details.hub-item > summary::-webkit-details-marker { display: none; }
+details.hub-item > summary .n { margin-left: auto; background: #f1f5f9; color: #64748b; border-radius: 10px; padding: 0 7px; font-family: inherit; font-size: 10px; font-weight: 700; }
+details.hub-item[open] > summary { border-bottom: 1px solid #f1f5f9; }
+details.hub-item .lk { display: block; padding: 6px 10px 6px 14px; font-size: 12px; color: #374151; text-decoration: none; border-top: 1px solid #f8fafc; line-height: 1.35; }
+details.hub-item .lk:hover { background: #f0f9ff; color: #1d4ed8; }
+details.hub-item.tbl > summary { color: #0f766e; }
+details.hub-item.std > summary { color: #1d4ed8; }
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 8px; }
+a.hub-card { display: block; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444; border-radius: 8px; padding: 10px 12px; text-decoration: none; }
+a.hub-card:hover { border-color: #3b82f6; border-left-color: #ef4444; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+a.hub-card .t { font-size: 12.5px; font-weight: 700; color: #1e293b; line-height: 1.4; }
+a.hub-card .m { font-size: 10.5px; color: #94a3b8; margin-top: 5px; line-height: 1.4; }
+.hub-topic { background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; padding: 11px 13px; margin-bottom: 8px; }
+.hub-topic .tt { font-size: 13px; font-weight: 700; color: #1a2744; margin-bottom: 7px; }
+.hub-topic .tt .n { background: #f1f5f9; color: #64748b; border-radius: 10px; padding: 0 7px; font-size: 10px; margin-left: 5px; }
+.hub-topic a.lk { display: inline-block; margin: 2px 5px 2px 0; padding: 3px 9px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 11px; font-size: 11.5px; color: #374151; text-decoration: none; }
+.hub-topic a.lk:hover { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+a.hub-row { display: flex; gap: 10px; align-items: center; padding: 7px 11px; background: #fff; border: 1px solid #e2e8f0; border-radius: 7px; margin-bottom: 5px; text-decoration: none; }
+a.hub-row:hover { border-color: #3b82f6; background: #f0f9ff; }
+a.hub-row .t { font-size: 12.5px; color: #1e293b; font-weight: 600; flex: 1; line-height: 1.35; }
+a.hub-row .d { font-size: 10.5px; color: #94a3b8; white-space: nowrap; }
+.hub-note { font-size: 11.5px; color: #94a3b8; margin-bottom: 10px; line-height: 1.5; }
+</style>
+<script>
+(function(){
+  'use strict';
+  var LS_MODE = 'archive-nav-mode', LS_CAT = 'archive-nav-cats';
+  // 흔한 표기 변이 정규화 — 검색어에만 적용(색인 원문은 그대로 둔다). 실사례: "버젼"으로 쳐도 0건이던 문제.
+  var SYN = { '버젼': '버전' };
+  function normQ(q){
+    q = (q || '').toLowerCase();
+    Object.keys(SYN).forEach(function(k){ q = q.split(k).join(SYN[k]); });
+    return q;
+  }
+  window.normQ = normQ;   // doSearch(맨 위 검색창)는 이 블록보다 먼저 정의된 별도 스크립트라 전역으로 공유
+  // 여러 단어 검색 = AND(전부 포함, 순서·인접 무관). 예: "매출품의 버전"은 본문에 그 문구가 붙어있지 않아도
+  // "매출품의"와 "버전"이 각각 어딘가에 있으면 매칭 — 종전 "문구 그대로 붙어있어야" 방식이던 실제 결함 수정.
+  function matchQ(text, q){
+    if(!q) return true;
+    var toks = q.split(/\s+/).filter(Boolean);
+    var t = (text || '').toLowerCase();
+    return toks.every(function(tok){ return t.indexOf(tok) >= 0; });
+  }
+  window.matchQ = matchQ;
+  var $  = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return [].slice.call((r || document).querySelectorAll(s)); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
+  var arts = [], byId = {}, groups = [], IX = null, hubReady = false, curTab = 'case', cur = null;
+
+  // ── 아티클 메타 추출 ──
+  function T(a){ var e = a.querySelector('.at');    return e ? e.textContent.trim() : (a.id || '(제목 없음)'); }
+  function D(a){ var e = a.querySelector('.db');    return e ? e.textContent.trim() : ''; }
+  function B(a){ var e = a.querySelector('.badge'); return e ? e.textContent.trim() : ''; }
+
+  // ── 코드 인식 패턴 (본문에서 T-Code·테이블을 자동 수집) ──
+  var RE_Z       = /\bZ[A-Z]{1,3}\d{3,4}[A-Z]?\b/g;   // 3자리 채번(ZBCO070 등)도 포함
+  var RE_STD_T   = /\b(VA0[1-3]|VL0[12]N|VL0[1-9]|VF0[1-9]|VF1[01]|FD3[0-9]|FBL5N|FB0[1-9]|VKM[1-5]|SE1[1368]N?|SE3[78]|SE80|SE93|ST22|SM3[0-9]|SM12|SU0[13]|SU53|SPRO|STMS|SCC4|SOST|SP01|MB5[12]|MMBE|MM0[1-3]|XD0[1-3]|VD0[1-3]|VOV8|OVA[0-9])\b/g;
+  var RE_STD_TBL = /\b(VBAK|VBAP|VBEP|VBFA|VBUK|VBUP|LIKP|LIPS|VBRK|VBRP|KNA1|KNVV|KNKK|KNB1|KNVP|MARA|MARC|MVKE|MAKT|BKPF|BSEG|BSID|BSAD|AUFK|COEP|EKKO|EKPO|EBAN|UKMBP_CMS_SGM|UKM_ITEM|TVAK|TVAP|TVKO|T001)\b/g;
+
+  // ── 주제 클러스터 (한 글이 여러 주제에 속할 수 있다 = 위키형의 약점을 피하는 지점) ──
+  var TOPICS = [
+    { t:'💳 여신·신용',        k:['여신','신용','credit','fd32','fd33','vkm4','한도','블록','fscm'] },
+    { t:'📝 매출품의·결재',    k:['매출품의','품의','결재','상신','전결','iris','승인'] },
+    { t:'📦 오더·출고·납품',   k:['오더','출고','납품','delivery','vl0','인수증','이동요청'] },
+    { t:'🧾 세금계산서·빌링',  k:['세금계산서','빌링','계산서','역발행','정발행','vf0','매출인식'] },
+    { t:'↩️ 취소·반품',        k:['취소','반품','무상','반제','대체'] },
+    { t:'📅 결산·월말',        k:['결산','월말','마감','d+1','d+2','전기'] },
+    { t:'🛒 구매·매입',        k:['구매','매입','발주','ekko','ekpo','선구매'] },
+    { t:'📊 계획·CO-PA·원가',  k:['판매계획','co-pa','원가','수익성','zbco','zbsd021','롤링'] },
+    { t:'🔐 권한·사용자',      k:['권한','su01','역할','사용자','부여'] },
+    { t:'⚙️ 배치·인터페이스',  k:['배치','sm37','인터페이스','i/f','잡','스케줄','연계'] },
+    { t:'🏗️ 개발·CTS·이행',    k:['cts','전송요청','이행','정보처리의뢰서','abap','개발','dump','st22'] },
+    { t:'👤 마스터데이터',     k:['마스터','자재마스터','고객마스터','kna1','mara','조직'] }
+  ];
+
+  // ══ 주입 ══════════════════════════════════════════════════════════════
+  function injectModeBar(){
+    var bar = $('#search-bar'); if(!bar) return;
+    var w = document.createElement('span');
+    w.id = 'nav-modes'; w.setAttribute('data-noexport','');
+    w.innerHTML = '<button type="button" data-mode="hub" title="색인 화면으로 (Esc)">🧭 색인</button>' +
+                  '<button type="button" data-mode="all" title="한 장에 전부 — 기존 방식(Ctrl+F 통검색)">📚 전체</button>';
+    bar.appendChild(w);
+  }
+
+  function injectSidebar(){
+    var sb = $('#sidebar'); if(!sb) return;
+    var top = document.createElement('div');
+    top.id = 'nav-side-top'; top.setAttribute('data-noexport','');
+    top.innerHTML = '<button type="button" id="nav-hub-btn">🧭 색인으로</button>' +
+                    '<input id="nav-filter" type="text" placeholder="제목 빠른 찾기…">';
+    sb.insertBefore(top, sb.firstChild);
+
+    // 카테고리 그룹은 DOM을 재구성하지 않고 "메모리에서만" 묶는다(저장본 무손상)
+    var g = null;
+    [].slice.call(sb.children).forEach(function(el){
+      if(el.classList.contains('nav-cat-title')){ g = { title: el, links: [] }; groups.push(g); }
+      else if(el.classList.contains('nav-link') && g){ g.links.push(el); }
+    });
+    var open = {}; try { open = JSON.parse(localStorage.getItem(LS_CAT) || '{}'); } catch(e){}
+    groups.forEach(function(gr, i){
+      var c = document.createElement('span');
+      c.className = 'nav-cnt'; c.setAttribute('data-noexport',''); c.textContent = gr.links.length;
+      gr.title.appendChild(c);
+      setGroup(gr, open[i] !== false);
+    });
+  }
+
+  function injectBars(){
+    var c = $('#content'); if(!c) return;
+    var d = document.createElement('div');
+    d.id = 'doc-bar'; d.setAttribute('data-noexport','');
+    d.innerHTML = '<button type="button" class="db-hub">🧭 색인</button>' +
+                  '<span class="db-crumb"></span><span class="db-title"></span>' +
+                  '<span class="db-sp">' +
+                    '<button type="button" class="db-prev">◀ 이전</button>' +
+                    '<button type="button" class="db-next">다음 ▶</button>' +
+                    '<button type="button" class="db-all">📚 전체에서 보기</button>' +
+                  '</span>';
+    c.insertBefore(d, c.firstChild);
+
+    var h = document.createElement('div');
+    h.id = 'nav-hub'; h.setAttribute('data-noexport','');
+    h.innerHTML = '<div class="hub-h"><h2>🧭 아카이브 색인</h2><span class="sub"></span></div>' +
+                  '<div class="hub-tabs"></div>' +
+                  '<input id="hub-filter" type="text" placeholder="색인 안에서 거르기 — 코드·제목·태그">' +
+                  '<div id="hub-body"></div>';
+    c.insertBefore(h, d.nextSibling);
+  }
+
+  // ══ 역인덱스 (로드할 때 DOM에서 계산 — 파일에 저장하지 않는다) ═══════════
+  function buildIndex(){
+    if(IX) return IX;
+    var tcode = {}, table = {};
+    function add(map, k, id){ (map[k] = map[k] || {})[id] = 1; }
+    arts.forEach(function(a){
+      if(!a.id) return;
+      var txt = (T(a) + ' ' + (a.dataset.tags || '') + ' ' + a.textContent).toUpperCase(), m;
+      RE_Z.lastIndex = 0;
+      while((m = RE_Z.exec(txt))){ (/^ZT/.test(m[0]) ? add(table, m[0], a.id) : add(tcode, m[0], a.id)); }
+      RE_STD_T.lastIndex = 0;
+      while((m = RE_STD_T.exec(txt))) add(tcode, m[0], a.id);
+      RE_STD_TBL.lastIndex = 0;
+      while((m = RE_STD_TBL.exec(txt))) add(table, m[0], a.id);
+    });
+    IX = { tcode: tcode, table: table };
+    return IX;
+  }
+
+  function famT(c){
+    if(/^ZR/.test(c)) return '🔎 조회·리포트 (ZR)';
+    if(/^ZB/.test(c)) return '⚙️ 배치·프로그램 (ZB)';
+    if(/^ZE/.test(c)) return '🖥️ 화면·모듈풀 (ZE)';
+    if(/^Z/.test(c))  return '🧩 기타 Z';
+    return '📗 SAP 표준 T-Code';
+  }
+  function famTbl(c){ return /^ZT/.test(c) ? '🗄️ 커스텀 테이블 (ZT)' : '📗 SAP 표준 테이블'; }
+
+  function itemHtml(code, ids, cls){
+    ids = ids.slice().sort(function(x, y){ return byId[x]._ix - byId[y]._ix; });
+    var links = ids.map(function(id){ return '<a class="lk" href="#' + id + '">' + esc(T(byId[id])) + '</a>'; }).join('');
+    var k = (code + ' ' + ids.map(function(id){ return T(byId[id]) + ' ' + (byId[id].dataset.tags || ''); }).join(' ')).toLowerCase();
+    return '<details class="hub-item ' + cls + '" data-k="' + esc(k) + '"><summary>' + esc(code) +
+           '<span class="n">' + ids.length + '</span></summary>' + links + '</details>';
+  }
+
+  function renderCodes(map, famFn, order, cls){
+    var byFam = {};
+    Object.keys(map).forEach(function(c){ (byFam[famFn(c)] = byFam[famFn(c)] || []).push(c); });
+    var html = '<div class="hub-note">본문·태그에서 자동 수집한 역인덱스입니다. 코드를 펼치면 그 코드를 다루는 글이 전부 나옵니다.</div>';
+    order.forEach(function(f){
+      var list = byFam[f]; if(!list || !list.length) return;
+      list.sort(function(x, y){
+        var d = Object.keys(map[y]).length - Object.keys(map[x]).length;
+        return d || (x < y ? -1 : 1);
+      });
+      html += '<div class="hub-sec"><div class="hub-fam">' + esc(f) + ' <span style="color:#cbd5e1">· ' + list.length + '</span></div><div class="hub-codes">' +
+              list.map(function(c){ return itemHtml(c, Object.keys(map[c]), /^Z/.test(c) ? cls : 'std'); }).join('') +
+              '</div></div>';
+    });
+    return html;
+  }
+
+  function renderCases(){
+    var list = arts.filter(function(a){ return a.id && a.querySelector('.badge.b-트러블'); });
+    list.sort(function(x, y){ return D(y).localeCompare(D(x)); });
+    return '<div class="hub-note">겪은 문제와 해결 기록 ' + list.length + '건 — 최근 순. 카드를 누르면 그 글만 펼쳐집니다.</div><div class="hub-grid">' +
+      list.map(function(a){
+        var tags = $$('.tags .tag', a).slice(0, 4).map(function(t){ return t.textContent.trim(); }).join(' ');
+        var k = (T(a) + ' ' + tags + ' ' + (a.dataset.tags || '')).toLowerCase();
+        return '<a class="hub-card" href="#' + a.id + '" data-k="' + esc(k) + '">' +
+               '<div class="t">' + esc(T(a)) + '</div>' +
+               '<div class="m">' + esc(D(a)) + (tags ? ' · ' + esc(tags) : '') + '</div></a>';
+      }).join('') + '</div>';
+  }
+
+  function chip(a){ return '<a class="lk" href="#' + a.id + '">' + esc(T(a)) + '</a>'; }
+
+  function renderTopics(){
+    var html = '<div class="hub-note">카테고리는 글이 놓인 자리, 주제는 글을 가로지르는 묶음입니다. 한 글이 여러 주제에 동시에 들어갑니다.</div>';
+    // ① 카테고리(사이드바와 동일한 5분류)
+    var cats = {};
+    arts.forEach(function(a){ if(!a.id) return; var b = B(a) || '기타'; (cats[b] = cats[b] || []).push(a); });
+    html += '<div class="hub-sec"><div class="hub-fam">📂 카테고리</div>';
+    Object.keys(cats).forEach(function(b){
+      var k = (b + ' ' + cats[b].map(T).join(' ')).toLowerCase();
+      html += '<div class="hub-topic" data-k="' + esc(k) + '"><div class="tt">' + esc(b) +
+              '<span class="n">' + cats[b].length + '</span></div>' + cats[b].map(chip).join('') + '</div>';
+    });
+    html += '</div>';
+    // ② 주제 클러스터
+    html += '<div class="hub-sec"><div class="hub-fam">🧵 주제로 가로지르기</div>';
+    TOPICS.forEach(function(tp){
+      var hit = arts.filter(function(a){
+        if(!a.id) return false;
+        // data-tags(AI 검색용 키워드 덤프)가 아니라 제목 + 사람이 붙인 태그칩으로 매칭
+        // — 덤프로 매칭하면 한 주제가 전체의 절반을 삼켜 색인 구실을 못 한다.
+        var s = (T(a) + ' ' + $$('.tags .tag', a).map(function(t){ return t.textContent; }).join(' ')).toLowerCase();
+        return tp.k.some(function(w){ return s.indexOf(w) >= 0; });
+      });
+      if(!hit.length) return;
+      var k = (tp.t + ' ' + tp.k.join(' ') + ' ' + hit.map(T).join(' ')).toLowerCase();
+      html += '<div class="hub-topic" data-k="' + esc(k) + '"><div class="tt">' + esc(tp.t) +
+              '<span class="n">' + hit.length + '</span></div>' + hit.map(chip).join('') + '</div>';
+    });
+    return html + '</div>';
+  }
+
+  function renderRecent(){
+    var list = arts.filter(function(a){ return a.id; }).slice();
+    list.sort(function(x, y){ return D(y).localeCompare(D(x)); });
+    return '<div class="hub-note">기록 날짜 최신 순 전체 ' + list.length + '건.</div>' +
+      list.map(function(a){
+        var k = (T(a) + ' ' + B(a) + ' ' + (a.dataset.tags || '')).toLowerCase();
+        return '<a class="hub-row" href="#' + a.id + '" data-k="' + esc(k) + '">' +
+               '<span class="t">' + esc(T(a)) + '</span>' +
+               '<span class="d">' + esc(B(a)) + ' · ' + esc(D(a)) + '</span></a>';
+      }).join('');
+  }
+
+  function buildHub(){
+    if(hubReady) return;
+    var ix = buildIndex();
+    var nT = Object.keys(ix.tcode).length, nB = Object.keys(ix.table).length;
+    var sub = $('#nav-hub .hub-h .sub');
+    if(sub) sub.textContent = '아티클 ' + arts.length + ' · T-Code ' + nT + ' · 테이블 ' + nB +
+                              ' — 열 때마다 본문에서 자동 생성(파일에 저장되지 않음)';
+    var nCase = arts.filter(function(a){ return a.querySelector('.badge.b-트러블'); }).length;
+    var tabs = [
+      { id:'case',   t:'🔧 케이스 '  + nCase },
+      { id:'tcode',  t:'🧩 T-Code '  + nT },
+      { id:'table',  t:'🗄️ 테이블 '  + nB },
+      { id:'topic',  t:'📚 주제·분류' },
+      { id:'recent', t:'🕒 최근' }
+    ];
+    $('#nav-hub .hub-tabs').innerHTML = tabs.map(function(t){
+      return '<button type="button" data-tab="' + t.id + '">' + t.t + '</button>';
+    }).join('');
+    hubReady = true;
+    showTab(curTab);
+  }
+
+  function showTab(id){
+    curTab = id;
+    $$('#nav-hub .hub-tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === id); });
+    var ix = buildIndex(), html;
+    if(id === 'tcode')       html = renderCodes(ix.tcode, famT,   ['🔎 조회·리포트 (ZR)','⚙️ 배치·프로그램 (ZB)','🖥️ 화면·모듈풀 (ZE)','🧩 기타 Z','📗 SAP 표준 T-Code'], 'tc');
+    else if(id === 'table')  html = renderCodes(ix.table, famTbl, ['🗄️ 커스텀 테이블 (ZT)','📗 SAP 표준 테이블'], 'tbl');
+    else if(id === 'topic')  html = renderTopics();
+    else if(id === 'recent') html = renderRecent();
+    else                     html = renderCases();
+    $('#hub-body').innerHTML = html;
+    var f = $('#hub-filter'); if(f && f.value) hubFilter(f.value);
+  }
+
+  function hubFilter(q){
+    q = normQ((q || '').trim());
+    $$('#hub-body [data-k]').forEach(function(el){
+      el.style.display = matchQ(el.getAttribute('data-k'), q) ? '' : 'none';
+    });
+    $$('#hub-body .hub-sec').forEach(function(s){
+      var any = $$('[data-k]', s).some(function(e2){ return e2.style.display !== 'none'; });
+      s.style.display = any ? '' : 'none';
+    });
+  }
+
+  // ══ 모드 전환 ═════════════════════════════════════════════════════════
+  function resetSearch(){
+    var i = $('#search-input');
+    if(i && i.value){ i.value = ''; if(typeof doSearch === 'function') doSearch(); }
+    // 검색이 남긴 인라인 display 잔상 정리
+    arts.forEach(function(a){ if(a.style.display) a.style.display = ''; });
+    $$('#content .cat-header').forEach(function(h){ if(h.style.display) h.style.display = ''; });
+  }
+
+  function applyMode(m){
+    var b = document.body;
+    b.classList.remove('mode-hub','mode-doc','mode-all');
+    b.classList.add('mode-' + m);
+    $$('#nav-modes button').forEach(function(x){ x.classList.toggle('on', x.dataset.mode === m); });
+    if(m === 'hub'){ resetSearch(); buildHub(); cur = null; markNav(null); }
+    if(m === 'doc'){ refreshDoc(); }
+    if(m === 'all'){ cur = null; markNav(null); }
+    try { localStorage.setItem(LS_MODE, m === 'doc' ? 'hub' : m); } catch(e){}   // 문서 모드는 기억하지 않음 → 다음 방문은 색인부터
+    if(m !== 'all'){ var c = $('#content'); if(c) c.scrollTop = 0; }
+  }
+
+  function refreshDoc(){
+    var id = (location.hash || '').replace(/^#/, ''), a = byId[id];
+    if(!a){ applyMode('hub'); return; }
+    cur = a;
+    a.classList.remove('collapsed');                       // 문서 모드에선 항상 펼침
+    var bar = $('#doc-bar');
+    if(bar){
+      var p = arts[a._ix - 1], n = arts[a._ix + 1];
+      $('.db-crumb', bar).textContent = B(a) + ' ›';
+      $('.db-title', bar).textContent = T(a);
+      var pb = $('.db-prev', bar), nb = $('.db-next', bar);
+      pb.disabled = !p; nb.disabled = !n;
+      pb.title = p ? T(p) : ''; nb.title = n ? T(n) : '';
+    }
+    markNav(id);
+    var c = $('#content'); if(c) c.scrollTop = 0;
+  }
+
+  function go(id){
+    if(!byId[id]) return;
+    resetSearch();
+    if((location.hash || '').replace(/^#/, '') === id){ applyMode('doc'); }
+    else { location.hash = id; applyMode('doc'); }        // :target 기반 → 딥링크·뒤로가기 유지
+  }
+  function step(d){ if(cur && arts[cur._ix + d]) go(arts[cur._ix + d].id); }
+
+  function markNav(id){
+    $$('#sidebar a.nav-link.nav-on').forEach(function(a){ a.classList.remove('nav-on'); });
+    if(!id) return;
+    var link = $('#sidebar a.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    var g = groups.filter(function(gr){ return gr.links.indexOf(link) >= 0; })[0];
+    if(g && g.title.classList.contains('nav-collapsed')) setGroup(g, true), saveGroups();
+    link.classList.add('nav-on');
+    if(link.scrollIntoView) link.scrollIntoView({ block: 'nearest' });
+  }
+
+  function setGroup(g, open){
+    g.title.classList.toggle('nav-collapsed', !open);
+    g.links.forEach(function(a){ a.classList.toggle('nav-hide', !open); });
+  }
+  function saveGroups(){
+    var o = {};
+    groups.forEach(function(g, i){ o[i] = !g.title.classList.contains('nav-collapsed'); });
+    try { localStorage.setItem(LS_CAT, JSON.stringify(o)); } catch(e){}
+  }
+
+  function navFilter(q){
+    q = normQ((q || '').trim());
+    if(!q){
+      $$('#sidebar .nav-f-hide').forEach(function(e){ e.classList.remove('nav-f-hide'); });
+      var st = {}; try { st = JSON.parse(localStorage.getItem(LS_CAT) || '{}'); } catch(e){}
+      groups.forEach(function(g, i){ setGroup(g, st[i] !== false); });
+      return;
+    }
+    groups.forEach(function(g){
+      var any = false;
+      g.links.forEach(function(a){
+        var id = (a.getAttribute('href') || '').slice(1);
+        // 제목만이 아니라 그 글 본문 전체까지 본다 — 제목엔 안 나오고 본문에만 있는 사실도 찾아지도록
+        var art = byId[id];
+        var s = (a.textContent + ' ' + (art ? (art.dataset.tags || '') + ' ' + art.textContent : '')).toLowerCase();
+        var hit = matchQ(s, q);
+        a.classList.toggle('nav-f-hide', !hit);
+        a.classList.remove('nav-hide');                    // 찾는 동안엔 접힘 무시
+        if(hit) any = true;
+      });
+      g.title.classList.toggle('nav-f-hide', !any);
+      g.title.classList.remove('nav-collapsed');
+    });
+  }
+
+  // ══ 이벤트 ════════════════════════════════════════════════════════════
+  function wire(){
+    // capture 단계 — 기존 nav-link 스크롤 핸들러보다 먼저 잡는다
+    document.addEventListener('click', function(e){
+      if(document.body.classList.contains('editing')) return;
+      var t = e.target;
+      var mb = t.closest('#nav-modes button'); if(mb){ applyMode(mb.dataset.mode); return; }
+      if(t.closest('#nav-hub-btn') || t.closest('.db-hub')){ applyMode('hub'); return; }
+      if(t.closest('.db-all')){ var k = cur; applyMode('all'); if(k) setTimeout(function(){ k.scrollIntoView({ block:'start' }); }, 0); return; }
+      if(t.closest('.db-prev')){ step(-1); return; }
+      if(t.closest('.db-next')){ step(1);  return; }
+      var tb = t.closest('#nav-hub .hub-tabs button'); if(tb){ showTab(tb.dataset.tab); return; }
+      var ct = t.closest('#sidebar .nav-cat-title');
+      if(ct){
+        var g = groups.filter(function(x){ return x.title === ct; })[0];
+        if(g){ setGroup(g, ct.classList.contains('nav-collapsed')); saveGroups(); }
+        return;
+      }
+      var lk = t.closest('#sidebar a.nav-link, #nav-hub a[href^="#"]');
+      if(lk){ e.preventDefault(); e.stopPropagation(); go(lk.getAttribute('href').slice(1)); return; }
+      // 문서 모드에서 본문 안 상호참조 링크(관련 글·rel-chip)도 페이지 이동으로
+      var al = t.closest('#content a[href^="#"]');
+      if(al && document.body.classList.contains('mode-doc')){
+        var id = al.getAttribute('href').slice(1);
+        if(byId[id]){ e.preventDefault(); e.stopPropagation(); go(id); return; }
+      }
+      // 태그칩 클릭(기존 기능: 검색어로 넣기) → 결과가 보이도록 전체 모드로
+      if(t.closest('#content .tags .tag')){ setTimeout(function(){ applyMode('all'); }, 0); }
+    }, true);
+
+    var si = $('#search-input');
+    if(si) si.addEventListener('input', function(){
+      if(si.value.trim() && !document.body.classList.contains('mode-all')) applyMode('all');
+    });
+    var nf = $('#nav-filter'); if(nf) nf.addEventListener('input', function(){ navFilter(nf.value); });
+    var hf = $('#hub-filter'); if(hf) hf.addEventListener('input', function(){ hubFilter(hf.value); });
+
+    window.addEventListener('hashchange', function(){
+      var id = (location.hash || '').replace(/^#/, '');
+      if(byId[id] && !document.body.classList.contains('mode-all')) applyMode('doc');
+    });
+
+    document.addEventListener('keydown', function(e){
+      if(document.body.classList.contains('editing')) return;
+      var t = e.target, tag = ((t && t.tagName) || '').toLowerCase();
+      var typing = (tag === 'input' || tag === 'textarea' || (t && t.isContentEditable));
+      if(e.key === 'Escape'){ if(typing) t.blur(); applyMode('hub'); }
+      else if(e.key === '/' && !typing){ e.preventDefault(); var i = $('#search-input'); if(i) i.focus(); }
+      else if(!typing && document.body.classList.contains('mode-doc')){
+        if(e.key === 'ArrowLeft')  step(-1);
+        if(e.key === 'ArrowRight') step(1);
+      }
+    });
+
+    // AI 검색 패널(서버가 런타임 주입)이 근거 아티클로 점프할 때 — 색인/문서 모드면 그 글로 이동시킨 뒤 스크롤
+    if(typeof window.scrollToArticle === 'function'){
+      var _sa = window.scrollToArticle;
+      window.scrollToArticle = function(id){
+        var clean = String(id == null ? '' : id).replace('#', '');
+        if(byId[clean] && !document.body.classList.contains('mode-all')) go(clean);
+        return _sa.apply(this, arguments);
+      };
+    }
+
+    // 편집 모드로 들어가면 전체 보기로 (기존 편집·저장 동작을 건드리지 않기 위해)
+    if(typeof window.toggleEdit === 'function'){
+      var _te = window.toggleEdit;
+      window.toggleEdit = function(on){ if(on) applyMode('all'); return _te.apply(this, arguments); };
+    }
+  }
+
+  // ══ 시작 ══════════════════════════════════════════════════════════════
+  function init(){
+    arts = $$('#content article.article');
+    if(!arts.length) return;
+    arts.forEach(function(a, i){ a._ix = i; if(a.id) byId[a.id] = a; });
+    injectModeBar(); injectSidebar(); injectBars(); wire();
+    var h = (location.hash || '').replace(/^#/, '');
+    if(byId[h]) applyMode('doc');
+    else applyMode(localStorage.getItem(LS_MODE) === 'all' ? 'all' : 'hub');
+  }
+
+  function boot(){
+    try { init(); }
+    catch(err){
+      // 이 층이 실패해도 아카이브 본문은 기존 그대로 보여야 한다
+      document.body.classList.remove('mode-hub','mode-doc');
+      console.warn('[탐색 층] 초기화 실패 — 기존 전체 보기로 계속합니다.', err);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 </body>
