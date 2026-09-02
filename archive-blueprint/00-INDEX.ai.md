@@ -3,8 +3,8 @@ doc_type: ai_reference
 audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
-version: 2.3
-last_updated: 2026-08-25
+version: 2.4
+last_updated: 2026-09-01
 read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
 governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 블루프린트 동기화 + CHANGELOG 기록 의무 (아래 MANDATORY SYNC 참조)"
@@ -60,7 +60,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 | `log-inquiry.py` | (운영레이어) 문의 로그 헬퍼 CLI — 1줄 append + id-merge + OS락 | 상세 07 |
 | `_gen_tasks_index.py` | (운영레이어) `tasks.md` 경량 인덱스 생성기 — 살아있는 카드 목록+카드별 라인범위 추출 | `tasks.md`가 세션 컨텍스트에 안 들어갈 만큼 커졌을 때 도입. 상세 CHANGELOG 2026-08-25 |
 | `tasks-index.md` | (운영레이어) 위 생성기의 산출물 — 경량 인덱스 | 세션은 `tasks.md` 전체 대신 이것부터 읽고, 필요한 카드만 라인범위로 부분 읽기 |
-| `_check_board_sync.py` | (운영레이어) `tasks.md`↔`task-board.html`(`const TASKS`) 3중 데이터 동기화 점검 CLI | 누락·잔재·상태불일치 보고, 불일치 시 종료코드 1(자동수정 없음). 상세 CHANGELOG 2026-08-25 |
+| `_check_board_sync.py` | (운영레이어) `tasks.md`↔`task-board.html`(`const TASKS`) **두 벌** 동기화 + **`tasks-index.md` 신선도** 점검 CLI | 누락·잔재·상태불일치·인덱스 낡음 보고, 불일치 시 종료코드 1(자동수정 없음). 인덱스 판정은 mtime + 인덱스 머리말의 글자수/줄수 대조 2중(생성기와 **같은 계산식** 사용). 상세 CHANGELOG 2026-08-25·2026-09-01 |
 
 > **`reference-implementation/`** (이 저장소의 공개 동작본): `archive/`(위 도구들의 익명 실행본 — `archive-server.py`·`archive-intake.py`·`archive-menu.py` + 샘플 `archive.html` 9art/5cat) · `dashboard/`(운영레이어 동작본). 데이터는 전부 가상 샘플. 대시보드는 **별도 전용 레포 `11pyo/ai-collab-dashboard`** 로도 존재. 루트 `AGENTS.md`·`CLAUDE.md`가 새 AI 세션 자동 온보딩을 담당.
 
