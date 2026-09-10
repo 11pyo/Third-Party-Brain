@@ -3,7 +3,7 @@
 > **A project to build a "brain + hands" you can hand almost all your thinking and doing to.**
 > Today, its first piece — **an AI-searchable knowledge archive ("a third brain") you run from a single file**, plus the blueprint to replicate your own.
 
-🌐 [한국어](./README.md) · 🤖 [AGENTS.md](./AGENTS.md) · 🗂️ [AI Collaboration Dashboard](https://github.com/11pyo/ai-collab-dashboard) · 💬 [Discussions](https://github.com/11pyo/Third-Party-Brain/discussions) · 🆕 [v2.0 release](https://github.com/11pyo/Third-Party-Brain/releases/tag/v2.0)
+🌐 [한국어](./README.md) · 🤖 [AGENTS.md](./AGENTS.md) · 🗂️ [AI Collaboration Dashboard](https://github.com/11pyo/ai-collab-dashboard) · 🤖 [Wonpyobot](https://github.com/11pyo/wonpyobot) · 💬 [Discussions](https://github.com/11pyo/Third-Party-Brain/discussions) · 🆕 [v2.0 release](https://github.com/11pyo/Third-Party-Brain/releases/tag/v2.0)
 
 ---
 
@@ -142,6 +142,9 @@ Third-Party-Brain/
 
 > **Why docs come in pairs**: `*.human.md` is for people (narrative, rationale); `*.ai.md` is for other AI sessions (compact, directive). Same content, two forms — point an AI at `.ai.md`, read `.human.md` yourself.
 
+> 🔗 **Wonpyobot** — the stand-in agent that answers first-line questions from this archive while the operator is away: **https://github.com/11pyo/wonpyobot**
+> (The archive holds knowledge, the dashboard holds the record, Wonpyobot answers the door. The three are one set.)
+>
 > 🔗 **Sister repo**: the AI Collaboration Dashboard also has its own standalone repository → **https://github.com/11pyo/ai-collab-dashboard** (the `dashboard/` here is a convenience mirror).
 
 ---

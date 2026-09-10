@@ -3,7 +3,7 @@
 > **거의 모든 생각과 수행을 AI에게 맡기는 "뇌 + 손발"을 만드는 프로젝트.**
 > 그 첫 조각 — **파일 하나로 바로 쓰는** AI 검색 지식 아카이브("제3의 뇌")와, 내 것으로 복제하는 방법론.
 
-🌐 [English](./README.en.md) · 🤖 [AGENTS.md](./AGENTS.md) · 🗂️ [AI 협업 대시보드](https://github.com/11pyo/ai-collab-dashboard) · 💬 [Discussions (질문·피드백)](https://github.com/11pyo/Third-Party-Brain/discussions) · 🆕 [v2.0 릴리스](https://github.com/11pyo/Third-Party-Brain/releases/tag/v2.0)
+🌐 [English](./README.en.md) · 🤖 [AGENTS.md](./AGENTS.md) · 🗂️ [AI 협업 대시보드](https://github.com/11pyo/ai-collab-dashboard) · 🤖 [원표봇](https://github.com/11pyo/wonpyobot) · 💬 [Discussions (질문·피드백)](https://github.com/11pyo/Third-Party-Brain/discussions) · 🆕 [v2.0 릴리스](https://github.com/11pyo/Third-Party-Brain/releases/tag/v2.0)
 
 ---
 
@@ -142,6 +142,9 @@ Third-Party-Brain/
 
 > **문서가 2벌씩인 이유**: `*.human.md`는 사람이 읽는 용(배경·이유 서술), `*.ai.md`는 다른 AI 세션이 읽는 용(압축·지시형). 같은 내용의 다른 표현 — AI에게 맡길 땐 `.ai.md`, 직접 이해할 땐 `.human.md`.
 
+> 🔗 **원표봇** — 담당자가 자리를 비운 사이 이 아카이브를 근거로 문의에 1차 대응하는 에이전트: **https://github.com/11pyo/wonpyobot**
+> (아카이브가 지식을, 대시보드가 기록을, 원표봇이 응대를 맡는다. 세 저장소는 한 벌이다.)
+>
 > 🔗 **자매 레포**: AI 협업 대시보드는 별도 전용 저장소로도 존재 → **https://github.com/11pyo/ai-collab-dashboard** (이 안의 `dashboard/`는 편의용 미러).
 
 ---
