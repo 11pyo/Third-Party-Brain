@@ -17,10 +17,12 @@
 - **Intake checker** (`archive-intake.py`) — before adding content, flags duplicates, **detects
   contradictions**, and recommends placement.
 - **Terminal UI** (`archive-menu.py`) — keyboard-only search/status, for servers/SSH.
+- **Follow-up appender** (`archive-note.py`) — adds a dated one-line follow-up to an existing article (a "📌 follow-ups" section), refusing unbalanced inline tags, a missing/duplicate id, or any change in article count; backs up before writing.
 
 - **AI 검색 서버** — `archive.html` 서빙 + BM25(char-2gram) 검색 → 로컬 Claude CLI 답변 + 원문 위치로 스크롤. `--share`로 LAN 공유.
 - **인테이크 체커** — 추가 전 중복·**모순 충돌** 탐지 + 배치 추천.
 - **터미널 UI** — 키보드 전용 검색/현황 (서버·SSH용).
+- **후속 기록 도구** — 기존 아티클 끝에 날짜별 후속 한 줄 추가(닫지 않은 태그·id 중복·아티클 수 변화를 쓰기 전에 거부, 백업 후 저장).
 
 ## Run · 실행
 ```bash
@@ -29,6 +31,7 @@ python archive-server.py               # → http://localhost:5174
 python archive-server.py --share       # LAN
 python archive-intake.py "ZSD030" "매출취소"   # intake check · 인테이크 점검
 python archive-menu.py                 # terminal UI · 터미널 UI
+python archive-note.py --id tcode-master --note "owner confirmed"   # follow-up line · 후속 한 줄
 ```
 Windows: double-click `run-server.bat` / `run-server-lan.bat` / `run-menu.bat`.
 The Claude CLI is only needed for AI answers; search/intake/TUI work without it.
