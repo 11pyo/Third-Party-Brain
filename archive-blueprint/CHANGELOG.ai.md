@@ -3,13 +3,21 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-09-28
+last_updated: 2026-09-29
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
 # CHANGELOG (프로그램·알고리즘·구조)
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
+
+## 2026-09-29
+- `[STRUCTURE]` **archive.html ↔ archive-structure.md 동기화 점검을 도구로(`task-dashboard/_check_archive_sync.py`, 읽기 전용).** 대조 항목: 아티클 id 중복 · id 집합 ↔ 구조 표 행 · 카테고리별 `<article>` 수 ↔ `<span class="cnt">` ↔ 구조 헤더 「(N개)」 ↔ 표 행 수 ↔ 「전체 아티클 수」 표 · 사이드바 `nav-link` 누락/죽은 링크(`class="article collapsed"` 는 사이드바 제외 허용). 카테고리 판정 = 아티클 앞의 마지막 `cnt` 위치. `_check_board_sync.py` 가 함께 호출(종료코드 = 세 점검의 max — 기존 `rc or host` 단락평가로 뒤 점검이 건너뛰던 것도 해소), Stop 훅 `stop_board_sync.py` 의 감시 대상에 `archive.html`·`archive-structure.md` 추가.
+  - 검증: 현재본 통과(122 = 122 = 122, 접힘 6) + 임시 복사본 음성 시험 3건(표 행 삭제 · cnt 변경 · 사이드바 링크 삭제) 전부 종료코드 1로 검출.
+  - 업무 시나리오 시뮬(복사본 12건: 질문만 한 턴 · archive-note 후속 기록 · 새 아티클 정상/반쪽 추가 · 같은 턴 두 번째 종료 · 아티클 접기 · 카드만 수정 · `--rounds` 신·구 방식 · 현업 공개 필드 · 훅 소요 1.5~3초)에서 결함 2건 발견·수정: ① id 정규식이 소문자·하이픈만 받아 밑줄·대문자 id 를 정상 추가해도 헛차단 → id 문자 범위를 넓힘 ② 다른 세션이 편집 중인 파일 때문에 이 세션이 막히면 남의 편집을 고치려 들 수 있음 → 차단 문구에 「이번 턴에 건드리지 않은 파일이면 고치지 말고 사용자에게 알릴 것」 추가.
+  - 영향파일: `task-dashboard/_check_archive_sync.py`(신규) · `task-dashboard/_check_board_sync.py` · `.claude/hooks/stop_board_sync.py` · `.claude/CLAUDE.md`(편집 후 동기화 절) · `.claude/model-playbook.md` §9.
+  - 이유: 보충본 §9 「id 전수 대조」가 기억에 의존하는 수기 단계였고, 2026-09-22 총점검의 손 대조에서 오탐 2건(접힌 아티클 · ★/소수 번호열)이 났다. 「규칙만 있고 도구가 없으면 낡는다」 원칙의 적용.
+- `[STRUCTURE]` **문의 기록에 `rounds` 필드(`log-inquiry.py --rounds N`).** 실시간 문의 1차 답변 전 도구 라운드 수(AI 자기 기록). 총점검 §D 효율 측정이 「측정 도구 없음」으로 매번 멈추던 것을 해소. 기존 기록 모양은 불변(값을 줄 때만 필드 추가).
 
 ## 2026-09-28 (5)
 - `[STRUCTURE]` **반복 실수 4종을 도구 관문으로(`guard_tools.py`, Pre/PostToolUse).** 실수 로그에 「또·재발·N번째」가 30건 이상 — 규칙이 있는데 재발한 것 중 도구가 정확히 판정할 수 있는 것만 골랐다. ① 개발계 SQL: 한 줄 255자 초과(서버 오류 유발)·`SELECT *` → 실행 전 거부 ② 조회 결과에 패킹 10진 컬럼이 있으면 「원화 CURR 원본은 ×100」 경고 부착(5회 반복) — **실측 발견: 조회 도구가 P 값을 JSON 숫자로 돌려줘 `.00`이 떨어지므로 값 모양이 아니라 컬럼 형식(P)으로 판정해야 한다** ③ 개발계 소스 반영·활성화 직후 「원격 재조회 0줄 diff + 재테스트 시 트랜잭션 재진입 안내」 부착 ④ 셸에서 명령 안에서 정해지지 않고 환경에도 없는 변수로 리다이렉션 → 거부(빈 경로 쓰기·입력 대기 멈춤 3연속).
