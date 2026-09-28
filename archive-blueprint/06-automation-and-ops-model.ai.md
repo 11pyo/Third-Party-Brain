@@ -2,7 +2,7 @@
 doc_type: ai_reference
 topic: automation_and_readonly_ops_model
 version: 1.0
-last_updated: 2026-06-05
+last_updated: 2026-09-28
 purpose: "반복 산출물 자동화(자가갱신 잠긴 스프레드시트) + 읽기전용 운영시스템 안전모델(read-structure/guide-prod) + 크로스레포 업적적재. 재현 시 참조."
 ---
 
@@ -23,6 +23,10 @@ purpose: "반복 산출물 자동화(자가갱신 잠긴 스프레드시트) + �
 
 ## 3. 업적 적재 (cross-repo, append-only)
 - 유의미 성과 → 별도 커리어 레포에 append. dedup(ID/제목). **공개수준 분류**(PUBLIC/INTERNAL/CONFIDENTIAL), 기밀=외부 미포함.
+
+## 4. 규칙→도구 집행 (Claude Code 훅, 2026-09-28)
+- UserPromptSubmit `prompt_context.py` = 세 곳 선행검색 자동 주입(경량 RAG, ≤1,500자) · Stop `stop_board_sync.py` = 카드 변경 시 인덱스 재생성+동기화 점검, 어긋나면 block 1회 · `permissions.ask` = 개발계 전송요청 생성·릴리즈·삭제 확인창.
+- 원칙: 기억에 의존하는 수기 단계는 수정 시각·이벤트로 판정하는 도구로 옮긴다. 훅 출력은 매 라운드 재독되므로 짧게.
 
 ## 보안/공개수준 (정직)
 - 공유본 = 실데이터 익명화 / 내부트래커 = 실명 OK / 기밀·PII = 비공유 로컬.
