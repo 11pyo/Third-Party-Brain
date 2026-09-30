@@ -1,3 +1,7 @@
+# Antigravity Rules Part 1
+
+<!-- 자동 생성물 · _gen_host_rules.py에 의해 생성됨 (직접 수정 금지) -->
+
 # AGENTS.md — onboarding for AI agents · AI 에이전트 온보딩
 
 > **새 대화 세션이면 이 파일을 먼저 읽으세요.** 이 한 장으로 이 저장소의 **기능·규칙·방향**을 즉시 파악할 수 있게 만들었습니다.

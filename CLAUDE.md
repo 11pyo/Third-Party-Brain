@@ -20,7 +20,9 @@ Third-Party-Brain = **AI 검색 가능 운영 지식 아카이브("제3의 뇌")
 3. **Blueprint sync** on program/structure changes (update `*.ai.md`+`*.human.md` + `CHANGELOG.*`). · 구조 변경 시 블루프린트·체인지로그 동기화.
 4. **Dashboard log is append-only** — use `log-inquiry.py`, never hand-edit `inquiry-log.js`. · 대시보드 로그 추가전용.
 5. **`*.local.md` = private, git-ignored** — never copy into committed files. · 로컬 비공개 메모.
+6. **Multi-Frontier AI Interoperability** — single-source rules via `_gen_host_rules.py`, verify with `_check_board_sync.py`. · 멀티 프론티어 AI 상호운용성 (규칙 파생 및 보드 동기화 검증).
 
 ## Start here · 시작점
 - `AGENTS.md` → `archive-blueprint/00-INDEX.ai.md` → `01` → `03` (algorithms) → `04` (replication).
 - Working code: `reference-implementation/archive/` and `reference-implementation/dashboard/`.
+- Verification: `python reference-implementation/dashboard/_check_board_sync.py` (exit code 0).

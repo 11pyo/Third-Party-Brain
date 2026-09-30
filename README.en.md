@@ -39,7 +39,7 @@ Do only as much as you want. **① alone is genuinely useful.**
 | Level | What | Needs | Who |
 |-------|------|-------|-----|
 | **① Just use it** | pile up knowledge in `archive.html`, keyword search | **a browser only** | **anyone (zero code)** |
-| **② Turn on AI search** | "natural-language question → AI answer + auto-scroll to source" | Python + (optional) Claude CLI | one-time install |
+| **② Turn on AI search** | "natural-language question → AI answer + auto-scroll to source" | Python + (optional) Frontier AI CLI (Claude, Gemini, etc.) | one-time install |
 | **③ Build your own system** | recreate an archive for your domain from scratch | the blueprint + (optional) an AI agent | yourself or AI-assisted |
 
 <details>
@@ -52,14 +52,14 @@ python archive-server.py            # → open http://localhost:5174
 ```
 - **Windows**: double-click `run-server.bat` (it runs the two lines for you) — but install Python first from [python.org](https://www.python.org/downloads/).
 - Add `--share` to share a link on your office LAN (`python archive-server.py --share`).
-- The **Claude CLI is only needed for "natural-language AI answers."** Keyword search, intake, and the terminal UI all work without it.
+- **An AI CLI (Claude Code, Gemini CLI, etc.) is only needed for "natural-language AI answers."** Keyword search, intake, and the terminal UI all work without it.
 
 </details>
 
 <details>
 <summary><b>③ Build your own (domain) archive</b> — expand</summary>
 
-**Easiest — let an AI do it:** hand the folder to an AI agent (e.g. Claude Code) and say
+**Easiest — let an AI do it:** hand the folder to an AI agent (Claude Code, Gemini/Antigravity, Codex, etc.) and say
 > *"Read this `AGENTS.md` and `archive-blueprint`, then set up an archive for my ○○ work."*
 
 The AI will **first ask you (STEP 0)** — domain · categories · a **do-not-store (sensitive) list** · code notation · synonyms, plus **the real content to fill it** (it won't invent your knowledge). Then it follows the 6 steps in [`04-replication-playbook`](./archive-blueprint/04-replication-playbook.human.md).
@@ -110,9 +110,9 @@ Adopts Obsidian's **linking patterns without the app**. Add a `data-related` att
 2. **Simple** — Python standard library only. One line to run (`python x.py`); non-developer friendly.
 3. **Search-friendly** — every article carries search keywords (`data-tags`).
 4. **Safe** — **never store** secrets: passwords, IPs, accounts, certificates, real data.
-5. **Local AI** — natural-language search via a local LLM CLI. No API key/cost, no data leaving your box.
+5. **Local AI & Multi-Frontier AI Interoperability** — natural-language search via local LLM CLI, and a single-source rule pipeline ensuring identical, robust collaboration across Claude, Gemini, GPT, and other frontier models.
 
-Invariants (INV1–INV9) and scaling thresholds (N ≤ 200 / 500 / 1000): [`00-INDEX`](./archive-blueprint/00-INDEX.human.md) · [`03-algorithms-scaling`](./archive-blueprint/03-algorithms-scaling.human.md).
+Invariants (INV1–INV15) and scaling thresholds (N ≤ 200 / 500 / 1000): [`00-INDEX`](./archive-blueprint/00-INDEX.human.md) · [`03-algorithms-scaling`](./archive-blueprint/03-algorithms-scaling.human.md).
 </details>
 
 ---

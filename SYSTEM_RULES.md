@@ -1,3 +1,20 @@
+# Standard Operational Rules (Model-Neutral)
+
+<!-- 자동 생성물 · _gen_host_rules.py에 의해 생성됨 (직접 수정 금지) -->
+
+## 0. 호스트 적응 (Host Adaptation) — 모델 공통 지침
+
+이 문서는 **Claude, Gemini, GPT 등 모든 AI 프론티어 모델을 위한 표준 운영 지침**입니다.
+정본 규칙 파일(`AGENTS.md`)에서 자동 파생되었으므로 직접 수정하지 마십시오.
+
+| 항목 | 호스트별 환경 | 수행할 작업 |
+|---|---|---|
+| **규칙 파일명** | Claude=`CLAUDE.md` · Codex/Cursor=`AGENTS.md` · Gemini=`GEMINI.md` · Antigravity=`.agents/rules/*.md` | 환경에 맞는 파일을 읽고 준수 |
+| **파일 도구** | Claude=`Read`/`Edit`/`Bash` · Gemini/Antigravity=`view_file`/`replace_file_content`/`run_command` · Codex=`read_file`/`edit_file` | 호스트별 도구 명칭을 자동 매핑하여 사용 |
+| **품질 검증** | 공통 검증 스크립트 실행 | 작업 완료 전 `python reference-implementation/dashboard/_check_board_sync.py` 무결성 확인 |
+
+---
+
 # AGENTS.md — onboarding for AI agents · AI 에이전트 온보딩
 
 > **새 대화 세션이면 이 파일을 먼저 읽으세요.** 이 한 장으로 이 저장소의 **기능·규칙·방향**을 즉시 파악할 수 있게 만들었습니다.

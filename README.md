@@ -39,7 +39,7 @@
 | 단계 | 무엇을 | 필요한 것 | 대상 |
 |------|--------|-----------|------|
 | **① 그냥 쓰기** | `archive.html`에 지식 쌓고 키워드 검색 | **브라우저만** | **누구나 (코딩 0)** |
-| **② AI 검색 켜기** | "자연어 질문 → AI 답변 + 원문 자동 이동" | Python 설치 + (선택) Claude CLI | 한 번만 설치 |
+| **② AI 검색 켜기** | "자연어 질문 → AI 답변 + 원문 자동 이동" | Python 설치 + (선택) 프론티어 AI CLI (Claude, Gemini 등) | 한 번만 설치 |
 | **③ 내 시스템 구축** | 내 도메인 아카이브를 0부터 재현 | 블루프린트 + (선택) AI 에이전트 | 직접 또는 AI 대행 |
 
 <details>
@@ -52,14 +52,14 @@ python archive-server.py            # → http://localhost:5174 접속
 ```
 - **Windows**: `run-server.bat` **더블클릭**이면 위 두 줄을 대신 해줍니다 (단, Python은 [python.org](https://www.python.org/downloads/)에서 먼저 설치).
 - `--share` 를 붙이면 같은 사무실 LAN에 링크 공유 (`python archive-server.py --share`).
-- **Claude CLI는 "자연어 AI 답변"에만** 필요합니다. 키워드 검색·인테이크·터미널 UI는 CLI 없이도 동작합니다.
+- **AI CLI(Claude Code, Gemini CLI 등)는 "자연어 AI 답변"에만** 필요합니다. 키워드 검색·인테이크·터미널 UI는 CLI 없이도 동작합니다.
 
 </details>
 
 <details>
 <summary><b>③ 내 시스템(내 도메인 아카이브) 구축</b> — 펼치기</summary>
 
-**가장 쉬운 길 — AI에게 맡기기:** 폴더를 AI 에이전트(예: Claude Code)에게 주고
+**가장 쉬운 길 — AI에게 맡기기:** 폴더를 AI 에이전트(Claude Code, Gemini/Antigravity, Codex 등)에게 주고
 > *"이 `AGENTS.md`와 `archive-blueprint` 읽고, 내 ○○ 업무용 아카이브 셋업해줘"*
 
 라고 하면, AI가 **먼저 당신에게 묻습니다(STEP 0)** — 주제(도메인)·카테고리·**민감정보 금지목록**·코드 표기·동의어, 그리고 **실제로 채울 지식 내용**(지어내지 않습니다). 이후 [`04-replication-playbook`](./archive-blueprint/04-replication-playbook.human.md)의 6단계대로 만들어 줍니다.
@@ -110,9 +110,9 @@ Obsidian 앱 없이 그 **연결 패턴만** 흡수. 각 글에 `data-related` �
 2. **단순함** — 파이썬 표준 라이브러리만. `python x.py` 한 줄(비개발자 친화).
 3. **검색 친화** — 모든 아티클에 검색 키워드(`data-tags`).
 4. **안전** — 비밀번호·IP·계정·인증서 등 **민감정보 절대 미저장**.
-5. **로컬 AI 결합** — 로컬 LLM CLI로 자연어 검색. API 키·비용·데이터 유출 없음.
+5. **로컬 AI 결합 & 멀티 프론티어 AI 상호운용** — 로컬 LLM CLI 자연어 검색 및 Claude, Gemini, GPT 등 어떤 프론티어 모델과도 100% 동일하게 협응할 수 있도록 설계된 단일 정본 기반 규칙 파이프라인.
 
-불변식(INV1~INV9)·규모별 확장 임계점(N≤200 / 500 / 1000)은 [`00-INDEX`](./archive-blueprint/00-INDEX.human.md)·[`03-algorithms-scaling`](./archive-blueprint/03-algorithms-scaling.human.md).
+불변식(INV1~INV15)·규모별 확장 임계점(N≤200 / 500 / 1000)은 [`00-INDEX`](./archive-blueprint/00-INDEX.human.md)·[`03-algorithms-scaling`](./archive-blueprint/03-algorithms-scaling.human.md).
 </details>
 
 ---

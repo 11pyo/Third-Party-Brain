@@ -16,14 +16,19 @@
 **KO** — 보드 형태(작업을 카드로 만들어 상태 컬럼 사이로 흘려보냄)는 **토요타 생산방식(TPS)의 칸반(看板)** JIT 신호에서 유래해 Lean·Agile의 칸반 방식으로 이어진 계보를 따릅니다. 즉 *작업 흐름 시각화*는 토요타 칸반에서 영감. 단, **추가전용+id병합 동시기록 안전·무백엔드**는 토요타가 아니라 **이벤트 소싱/로그 구조** 계열의 별개 아이디어입니다.
 **EN** — The board form (cards flowing across status columns) descends from the **Toyota Production System's kanban (看板)** JIT signaling, via the Lean/Agile Kanban method — so the *work-flow visualization* is inspired by Toyota. The **append-only + id-merge, backend-less concurrency safety** is a separate, event-sourcing-style idea (not from Toyota).
 
-## 구성 파일
+## 구성 파일 · Files
 
-| 파일 | 역할 |
+| 파일 | 역할 · Role |
 |------|------|
-| `task-board.html` | **화면.** 더블클릭하면 브라우저에서 열림(서버 불요). 안에 `const TASKS=[…]` 샘플 카드 배열을 품고, `inquiry-log.js`를 `<script src>`로 읽음. |
-| `tasks.md` | **정본(正本).** 프로젝트 태스크의 원본(마크다운). 화면은 이걸 미러링한 것. |
-| `inquiry-log.js` | **문의 처리이력 데이터.** 추가전용 푸시로그(같은 id 재push=상태 전이 병합). |
-| `log-inquiry.py` | **문의 로그 헬퍼 CLI.** 로그를 직접 편집하지 않고 이 스크립트로 한 줄씩 안전하게 덧붙임(OS 파일락). |
+| `task-board.html` | **화면 (Board UI).** 더블클릭하면 브라우저에서 열림(서버 불요). 안에 `const TASKS=[…]` 샘플 카드 배열을 품고, `inquiry-log.js`를 `<script src>`로 읽음. |
+| `tasks.md` | **정본(正本, Source of Truth).** 프로젝트 태스크의 원본(마크다운). 화면은 이걸 미러링한 것. |
+| `tasks-index.md` | **세션 착수 인덱스 (Session Index).** 대형 태스크 파일에서 살아있는 카드와 라인 범위를 추출해 컨텍스트 낭비를 막는 목차 (자동 생성). |
+| `inquiry-log.js` | **문의 처리이력 데이터 (Inquiry Log).** 추가전용 푸시로그(같은 id 재push=상태 전이 병합). |
+| `log-inquiry.py` | **문의 로그 헬퍼 CLI (Inquiry Logger).** 로그를 직접 편집하지 않고 이 스크립트로 한 줄씩 안전하게 덧붙임(OS 파일락). |
+| `board-saver.py` | **대시보드 로컬 저장 서버 (Board Saver).** 브라우저 화면에서 수정한 카드를 `task-board.html`에 직접 저장(포트 5178 로컬 API). |
+| `_gen_tasks_index.py` | **인덱스 생성기 (Index Generator).** `tasks.md`를 분석하여 `tasks-index.md`를 자동 갱신. |
+| `_check_board_sync.py` | **보드 동기화 점검기 (Sync Checker).** `tasks.md` ↔ `task-board.html` 카드 불일치 및 인덱스 신선도를 자동 검증(종료코드 0/1). |
+| `_gen_host_rules.py` | **호스트 규칙 생성기 (Multi-Host Rule Generator).** 단일 정본 규칙에서 Claude, Gemini, Codex, Antigravity용 규칙을 자동 생성·점검. |
 
 ## 실행
 
@@ -46,6 +51,25 @@ python log-inquiry.py --done --id <그-id> --a "<처리 요약>" --ref "#<관련
 - **🤖 AI 참조 로그 — 카드 2층 구조 (2026-06-12)**: 카드 = **본문**(사람용·잘 정리된 현재 상태) + 접힘 **`ailog`**(AI용 — 시계열 작업로그·교훈·AI 방침). 긴 개발 카드도 **내용을 줄이지 않고(AI 문맥 전부 보존) 사람 화면은 깔끔하게**. **AI는 카드 작업 시 접힌 로그까지 반드시 정독**(기확정 사항이 거기 있음), 사람은 본문까지만. 갱신=로그에 append(축약 금지)+본문은 현재형 재정리. · **EN:** two-layer cards — curated body for humans + collapsed `ailog` (work log / lessons / AI policies) that **AI assistants must also read**; humans can skip it. Append to the log, keep the body curated.
   - 💡 **"덮어쓰기"가 걱정되면:** 내 파일을 방금 한 편집으로 갱신하는 것뿐(데이터 삭제 아님). **처음 한 번만** 파일을 골라 확인하면 이후엔 위치를 **기억해 한 번에** 저장(폴더 안 찾음). 화면 띄워둔 채로 OK. · **EN:** overwriting just updates *your own* file with your edits; pick it once, then one-click saves remember the location.
 - 완료 열은 높이 고정+스크롤이고, 열 머리의 **`⤢ 전체보기`**로 완료 카드를 큰 모달에서 모아 봅니다.
+
+## 🛠️ 실무 자동화 도구 체계 · Ops Automation Tooling
+
+**KO** — 프로젝트가 커지고 AI 협업이 다변화되면서 생기는 세 가지 문제(컨텍스트 한계·동기화 불일치·호스트별 규칙 파편화)를 해결하는 4종 도구입니다.
+
+1. **`python board-saver.py` (대시보드 저장 서버)**
+   - 브라우저에서 편집한 태스크를 포트 5178 로컬 API를 통해 `task-board.html`의 `TASKS` 배열에 즉시 영구 저장합니다.
+2. **`python _gen_tasks_index.py` (세션 착수 인덱스 생성)**
+   - `tasks.md`가 수십만 자로 커져도 AI가 전체 파일을 통째로 읽지 않고, `tasks-index.md`를 먼저 읽은 뒤 필요한 카드의 라인 범위만 부분 조회하도록 돕습니다.
+3. **`python _check_board_sync.py` (무결성 검증)**
+   - 카드 정본인 `tasks.md`와 화면 메타인 `task-board.html`, 그리고 인덱스 파일의 신선도가 100% 일치하는지 자동 검증합니다 (CI/종료코드 0).
+4. **`python _gen_host_rules.py` (멀티 AI 호스트 규칙 동기화)**
+   - 단일 정본 규칙(`CLAUDE.md`)을 읽어 Claude, Codex, Gemini, Antigravity용 규칙 파일을 자동 생성 및 동기화합니다 (`--check` 옵션 지원).
+
+**EN** — Four operational tools resolving context limits, drift, and rule fragmentation across multi-AI environments:
+- `board-saver.py`: Local HTTP server (port 5178) saving in-browser task edits directly back to `task-board.html`.
+- `_gen_tasks_index.py`: Generates lightweight `tasks-index.md` with line ranges so AI agents avoid loading entire markdown files.
+- `_check_board_sync.py`: Validates strict sync between `tasks.md`, `task-board.html`, and `tasks-index.md` (exit code 0/1).
+- `_gen_host_rules.py`: Compiles single-source rules into Claude, Codex, Gemini, and Antigravity formats.
 
 ## 카드 폼 구조 (수정 전 필독) · Card form structure (read before editing)
 
