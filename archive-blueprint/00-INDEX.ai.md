@@ -3,9 +3,9 @@ doc_type: ai_reference
 audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
-version: 2.5
-last_updated: 2026-09-30
-read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, CHANGELOG]
+version: 2.6
+last_updated: 2026-10-02
+read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, 08-autonomous-skill-loop, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
 governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 블루프린트 동기화 + CHANGELOG 기록 의무 (아래 MANDATORY SYNC 참조)"
 ---
@@ -39,10 +39,12 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 5. 대시보드/문의로그/조직맵 (개념) → `05-operational-layer.ai.md`. 정형보고 자동화/읽기전용 운영시스템 가이드/업적적재 → `06-automation-and-ops-model.ai.md`.
 6. 대시보드 **운영 규칙·CLI 사용법** (실무 매뉴얼) → `07-dashboard-operating-guide.ai.md`. 실행 가능한 익명 동작본(더블클릭 실행) → `reference-implementation/dashboard/`.
 7. 사용자가 "범용 LLM‑위키(예: Karpathy LLM Wiki·에이전트 `wiki` 스킬)와의 차이/결합"을 물으면 → 보조 노트 `COMPARISON-llm-wiki.md`(번호 챕터 아님; 비교 + 2단 scratch→canonical 승격 게이트 매핑[NEW/UPDATE/CONFLICT/REVIEW]).
+8. **일 단위 3단 레이어 스킬 캡슐화 & AI 자율 관리** (위임 플레이북) → `08-autonomous-skill-loop.ai.md`. 스킬 자동 로드, 자가 추출, 5~10개 실패 가능한 증명(Proof) 게이트, 자가 치유 루프.
 
 ## ARTIFACT MAP (원본 아카이브 구성물)
 | 파일 | 역할 | 비고 |
 |------|------|------|
+| `skills/` | 3단 레이어 업무 스킬 캡슐화 허브 (`SKILL.md`·`files/`·`examples/`·`notes.md`) | AI 자율 로드(Auto-Invoke)·자가 추출(Self-Extraction)·증명 게이트(Proof Gate)·자가 치유(Self-Healing). 상세 `08-*` |
 | `archive.html` | 단일 HTML 지식 베이스 (전체 데이터+UI+CSS+JS 인라인) | 수십~수백 아티클 / 5 카테고리(예시 도메인, 계속 증가). AI 패널은 서버가 런타임 주입. **탐색 층**(색인·문서·전체 3모드 + 런타임 역인덱스)이 `</body>` 직전 블록으로 내장 — 상세 `01-*` |
 | `archive-structure.md` | 경량 인덱스 (세션마다 전체 HTML 안 읽도록) | id·제목·키워드·카운트. **라인 열 없음**(2026-09-07 폐지 — 수기 라인은 반드시 낡는다; 위치는 `grep -n 'id="…"'`). **헤더 변경이력도 별도 파일로 분리**(2026-09-22 — 「최종 업데이트」 한 줄이 43KB까지 자란 걸 발견해 `archive-structure-changelog.md`로 이관, 헤더엔 최신 1건 요약만) |
 | `archive-intake.py` | 신규 정보 인테이크 — 중복·충돌·배치 자동 판별 CLI | 동의어확장·충돌패턴·카테고리분류 |
@@ -101,6 +103,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 - INV12: **공개 답변에는 사내 내부 식별자를 남기지 않는다.** 원표봇이 참고 자료(선례·작업 카드)에서 얻은 번호·추적 ID·요청자 이름은 판단에만 쓰고 공개 답변에 옮기지 않는다(프롬프트 지시). 쓰기 게이트가 패턴 매칭으로 한 번 더 막아, 지시를 빠뜨려도 표준 문구로 대체된다. 상세 `07-*` R21.
 - INV15: **규칙은 모델에 종속되지 않고 단일 정본에서 파생된다.** AI 호스트마다 지침 파일 이름·경로·형식이 다르더라도(Claude Code `.claude/CLAUDE.md`, OpenAI Codex `AGENTS.md`, Google Gemini `GEMINI.md`, Antigravity `.agents/rules/`), 손으로 여러 벌을 맞추지 않고 단일 모델 독립 정본(`SYSTEM_RULES.md`)에서 생성 도구(`_gen_host_rules.py`)로 파생한다. 상세 `06-*` §5.
 - INV16: **재생 평가 점수는 절대 정확도가 아니고, 채점 계산은 코드가 한다.** 사람이 이미 답한 문의를 다시 풀어 얻은 점수는 앞뒤 비교용이다(참고 자료에 정답 지식이 이미 있다) — 현업 판정 정확도와 섞지 않는다. 채점 모델은 항목 점수만 매기고 상한 · 차감은 코드가 계산하며, 새 채점기는 믿기 전에 옛 채점과 견줘(같은 답의 재채점 차이와 비교) 검증한다. 채점 기준이 운영 규칙과 충돌하는 사례(규칙상 답하지 않는 유형)는 세트에서 뺀다. **실행이 실패한 사례(시간초과 · 한도)는 0점이 아니라 「측정 불가」로 제외**하고, **채점 기준(정답지)은 피시험자가 읽는 사본에 넣지 않는다**(실제로 돌려 확인). 임계 건수는 속도 관문이지 안전 증명이 아니므로 정확도에는 신뢰구간 하한을 붙인다.
+- INV17: **반복 정형 업무는 3단 레이어(프로세스·툴박스·증명) 스킬로 캡슐화하며 AI가 자율 관리한다.** AI는 작업 완료 전 주관적 평가가 아닌 객관적이고 실패 가능한 증명(Proof) 게이트를 통과해야 하며, 오류 교정은 채팅이 아닌 스킬 파일(`SKILL.md`/`files/`/`notes.md`)에 영구적으로 반영한다. 상세 `08-*`.
 
 ## SCALING TRIGGERS (요약 — 상세는 03 문서)
 - N≤200 아티클: BM25(char-2gram) 인메모리 랭킹 (현재 방식) 충분.

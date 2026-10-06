@@ -29,11 +29,12 @@ Third-Party-Brain/
 ├─ LICENSE · CONTRIBUTING.md · SECURITY.md
 ├─ archive-blueprint/               ⭐ 방법론 문서 · the methodology
 │   ├─ 00-INDEX.*        진입점 · 아티팩트 맵 · 불변식(INV) · 동기화 지침
-│   ├─ 01..07-*.*        아키텍처/빌드업/알고리즘/복제/운영/자동화/대시보드 (각 .ai.md+.human.md)
+│   ├─ 01..08-*.*        아키텍처/빌드업/알고리즘/복제/운영/자동화/대시보드/스킬루프 (각 .ai.md+.human.md)
 │   └─ CHANGELOG.*       프로그램·구조 변경 이력
 └─ reference-implementation/        ⭐ 실행 가능한 동작본 (가짜 샘플 데이터)
     ├─ archive/          제3의뇌 아카이브 엔진 (BM25 검색서버·인테이크·TUI + 샘플 archive.html)
-    └─ dashboard/        AI 협업 대시보드 (append-only id-병합 로거 + 칸반·문의보드)
+    ├─ dashboard/        AI 협업 대시보드 (append-only id-병합 로거 + 칸반·문의보드)
+    └─ skills/           3단 레이어 스킬 허브 (프로세스·툴박스·증명 + 자율 추출/치유 루프)
 ```
 
 **Docs come in pairs · 문서는 2벌씩:** `*.ai.md` (compact, for AI agents) and `*.human.md` (narrative, for people). Same content, different form.
@@ -43,11 +44,11 @@ Third-Party-Brain/
 ## 3. Reading order for a new agent · 새 에이전트 권장 독서 순서
 
 1. **This file (AGENTS.md)** — orientation, rules.
-2. `archive-blueprint/00-INDEX.ai.md` — entry point, artifact map, invariants (INV1–INV9), sync rules.
+2. `archive-blueprint/00-INDEX.ai.md` — entry point, artifact map, invariants (INV1–INV17), sync rules.
 3. `archive-blueprint/01-overview-architecture.ai.md` → `03-algorithms-scaling.ai.md` — architecture + the search/intake algorithms (code-level).
 4. `archive-blueprint/04-replication-playbook.ai.md` — step-by-step to build a new archive.
-5. `05` (operational layer) · `06` (automation/ops safety) · `07` (dashboard guide).
-6. To see working code, open `reference-implementation/archive/` and `reference-implementation/dashboard/` (each has its own README).
+5. `05` (operational layer) · `06` (automation/ops safety) · `07` (dashboard guide) · `08` (autonomous skill loop).
+6. To see working code, open `reference-implementation/archive/`, `dashboard/`, and `skills/` (each has its own README/INDEX).
 
 ---
 
@@ -67,6 +68,8 @@ Third-Party-Brain/
    **`*.local.md`/`*.local`은 비공개 메모(gitignore)** — 의도 파악용으로만 읽고 커밋 파일에 옮기지 마세요.
 7. **Multi-Frontier AI Interoperability · 멀티 프론티어 AI 상호운용성.** Operational rules and instructions must be maintained in a single-source-of-truth manner (`CLAUDE.md` / `SYSTEM_RULES.md`) and compiled to host formats via `_gen_host_rules.py`. Never let rules drift across Claude, Gemini, Codex, or Antigravity. Always verify with `_check_board_sync.py`.
    **멀티 프론티어 AI 상호운용성.** 운영 규칙과 지침은 단일 정본으로 관리하고 `_gen_host_rules.py`로 컴파일·파생합니다. Claude, Gemini, Codex, Antigravity 간 규칙이 파편화되거나 낡지 않게 유지하고 `_check_board_sync.py`로 검증하세요.
+8. **Autonomous Skill Loop & Falsifiable Proof Gate · 자율 스킬 루프와 증명 게이트.** Recurring tasks are encapsulated in 3-layer skills (`SKILL.md` + `files/` + `notes.md`). Agents must autonomously invoke existing skills, self-extract new ones upon $\ge 2$ repetitions, and self-heal via layer diagnosis. Outputs must pass objective, falsifiable Proof tests before final delivery.
+   **자율 스킬 루프와 증명 게이트.** 반복 정형 업무는 3단 레이어 스킬로 캡슐화합니다. AI는 스킬을 스스로 로드해 실행하고, 2회 이상 반복/승인 시 스스로 새 스킬로 승격하며, 오류 시 매뉴얼을 직접 고칩니다. 산출물은 반드시 실패 가능한 객관적 증명(Proof)을 통과한 뒤 최종 제출합니다.
 
 ---
 

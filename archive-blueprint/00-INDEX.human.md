@@ -19,6 +19,7 @@
 | 05 | 운영 레이어 — 대시보드·충돌없는 로그·조직맵 | `05-operational-layer.human.md` |
 | 06 | 자동화·운영 안전 모델 | `06-automation-and-ops-model.human.md` |
 | 07 | 대시보드 운영 가이드 — 규칙 & 사용법 | `07-dashboard-operating-guide.human.md` |
+| 08 | 자율 스킬 루프 & 위임 플레이북 | `08-autonomous-skill-loop.human.md` |
 | — | 변경 이력 (수정 로그) | `CHANGELOG.human.md` |
 
 > ⭐ **실행 예제** (`reference-implementation/`, 모든 데이터 가상 샘플): `archive/` — 제3의뇌 아카이브 엔진(BM25 검색서버·인테이크·TUI + 샘플 `archive.html`) · `dashboard/` — 07 챕터 대시보드(더블클릭 실행). 대시보드는 **별도 전용 레포 `11pyo/ai-collab-dashboard`** 로도 존재.
@@ -44,6 +45,7 @@
 
 | 파일 | 한 줄 설명 |
 |------|-----------|
+| `skills/` | **3단 레이어 스킬 캡슐화 허브.** 일 단위로 프로세스·도구·증명 검증을 묶은 폴더 모음으로, AI가 스스로 로드하고 필요 시 새로 만듭니다. |
 | `archive.html` | **아카이브 본체.** 수십 개의 글(아티클)과 화면, 디자인, 검색 기능이 전부 이 파일 하나에 들어있습니다. |
 | `archive-structure.md` | 목차 역할. AI가 매번 거대한 HTML 전체를 읽지 않도록 글 목록만 따로 둔 가벼운 색인입니다. (2026-09-22~ 머리말의 변경이력은 `archive-structure-changelog.md`로 분리 — 머리말 자체가 43KB로 불어났던 걸 정리) |
 | `archive-intake.py` | 새 정보를 넣기 전에 **"이미 있는 내용인지, 기존과 충돌하는지, 어디에 넣어야 하는지"**를 자동으로 알려주는 도구. |
