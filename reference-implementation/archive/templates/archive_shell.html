@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Org — Knowledge Archive (Sample)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 14px; background: #f0f2f7; color: #2c3e50; }
+#header { background: #1a2744; color: white; padding: 14px 24px; position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+#header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+#header .subtitle { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+#demo-banner { background: #fef3c7; color: #92400e; font-size: 12px; padding: 7px 24px; border-bottom: 1px solid #fcd34d; }
+#search-bar { padding: 8px 24px; background: #fff; border-bottom: 1px solid #e2e8f0; position: sticky; top: 52px; z-index: 199; display: flex; align-items: center; gap: 12px; }
+#search-input { width: 360px; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: inherit; outline: none; }
+#search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #dbeafe; }
+#search-count { font-size: 12px; color: #94a3b8; }
+#layout { display: flex; min-height: calc(100vh - 116px); }
+#sidebar { width: 250px; min-width: 250px; background: #fff; border-right: 1px solid #e2e8f0; overflow-y: auto; position: sticky; top: 116px; height: calc(100vh - 116px); }
+.nav-cat-title { padding: 10px 14px 6px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #f1f5f9; }
+.nav-link { display: block; padding: 7px 14px 7px 20px; color: #374151; text-decoration: none; font-size: 12px; border-left: 3px solid transparent; transition: all 0.12s; line-height: 1.4; }
+.nav-link:hover { background: #f0f9ff; border-left-color: #3b82f6; color: #1d4ed8; }
+.nav-link .nd { font-size: 10px; color: #cbd5e1; display: block; margin-top: 1px; }
+#content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.cat-header { display: flex; align-items: center; gap: 10px; margin: 28px 0 14px; padding-bottom: 8px; border-bottom: 2px solid #1a2744; }
+.cat-header:first-child { margin-top: 0; }
+.cat-header h2 { font-size: 15px; font-weight: 700; color: #1a2744; }
+.cat-header .cnt { background: #1a2744; color: white; border-radius: 20px; padding: 1px 9px; font-size: 11px; }
+.article { background: #fff; border-radius: 10px; padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border: 1px solid #e2e8f0; }
+.ah { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.at { font-size: 17px; font-weight: 700; color: #1e293b; flex: 1; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.b-기초 { background: #dbeafe; color: #1d4ed8; }
+.b-프로세스 { background: #d1fae5; color: #065f46; }
+.b-기술 { background: #fef3c7; color: #92400e; }
+.b-트러블 { background: #fee2e2; color: #991b1b; }
+.b-매뉴얼 { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+.db { font-size: 11px; color: #94a3b8; padding-top: 4px; }
+.tags { margin-bottom: 14px; display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { display: inline-block; padding: 2px 8px; background: #f1f5f9; color: #475569; border-radius: 4px; font-size: 11px; border: 1px solid #e2e8f0; }
+.sec { margin-bottom: 18px; }
+.st { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #f1f5f9; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tbl th { background: #1a2744; color: white; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11.5px; }
+.tbl td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; line-height: 1.5; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:nth-child(even) td { background: #f8fafc; }
+.tc-z { font-family: 'Consolas', monospace; font-weight: 700; color: #7c3aed; }
+.tc { font-family: 'Consolas', monospace; font-weight: 700; color: #1d4ed8; }
+.dt { line-height: 1.75; color: #374151; font-size: 13px; }
+.dt p { margin-bottom: 11px; }
+.dt strong { color: #1e293b; }
+.flow-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding: 12px 14px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+.fb { padding: 5px 10px; border-radius: 5px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.fb-cur  { background: #1d4ed8; color: white; }
+.fb-next { background: #475569; color: white; }
+.fa { color: #94a3b8; font-size: 13px; padding: 0 1px; }
+.hl-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 7px; padding: 11px 13px; margin-bottom: 10px; font-size: 13px; }
+.warn-box { background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #ea580c; border-radius: 7px; padding: 11px 13px; margin: 10px 0; font-size: 13px; color: #9a3412; }
+.article.hidden { display: none; }
+/* ── Edit mode (server-less; saves via File System Access API, else downloads) ── */
+#edit-fab { position: fixed; bottom: 22px; right: 22px; z-index: 1000; display: flex; gap: 8px; }
+#edit-fab button { font: inherit; font-size: 13px; font-weight: 700; border: none; border-radius: 24px; padding: 10px 16px; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.2); }
+#btn-edit { background: #1d4ed8; color: #fff; }
+#btn-add, #btn-save, #btn-cancel { display: none; }
+#btn-add { background: #0ea5e9; color: #fff; }
+#btn-save { background: #16a34a; color: #fff; }
+#btn-cancel { background: #e2e8f0; color: #334155; }
+body.editing #btn-edit { display: none; }
+body.editing #btn-add, body.editing #btn-save, body.editing #btn-cancel { display: inline-block; }
+body.editing #header h1:hover, body.editing #header .subtitle:hover, body.editing .at:hover, body.editing .st:hover, body.editing .dt:hover, body.editing .hl-box:hover, body.editing .warn-box:hover, body.editing .tbl td:hover, body.editing .tbl th:hover, body.editing .tag:hover, body.editing .fb:hover { outline: 1px dashed #93c5fd; border-radius: 4px; cursor: text; }
+body.editing [contenteditable="true"] { outline: 1px dashed #93c5fd; border-radius: 4px; }
+body.editing [contenteditable="true"]:focus { outline: 2px solid #3b82f6; background: #eff6ff; }
+body.editing .article { border-color: #93c5fd; }
+#edit-hint { position: fixed; bottom: 22px; left: 22px; z-index: 1000; background: #1e293b; color: #fff; font-size: 12px; padding: 8px 12px; border-radius: 8px; display: none; max-width: 330px; line-height: 1.55; }
+body.editing #edit-hint { display: block; }
+#add-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 1100; display: none; align-items: center; justify-content: center; }
+#add-modal.open { display: flex; }
+#add-card { background: #fff; border-radius: 12px; padding: 22px; width: 460px; max-width: 92vw; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+#add-card h3 { font-size: 15px; margin-bottom: 6px; color: #1a2744; }
+#add-card label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin: 10px 0 4px; }
+#add-card input, #add-card textarea, #add-card select { width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font: inherit; font-size: 13px; }
+#add-card textarea { height: 100px; resize: vertical; }
+#add-card .row { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+#add-card .row button { font: inherit; font-weight: 700; border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer; }
+.toast { position: fixed; bottom: 70px; right: 22px; background: #16a34a; color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 1200; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>Demo Org — Knowledge Archive</h1>
+    <div class="subtitle">Sample data · single-file indexable archive · AI-searchable</div>
+  </div>
+</div>
+
+<div id="demo-banner">
+  ⚠️ <b>Sample / demo content.</b> Every company name, T-Code, table, and example below is fictional and exists only to demonstrate the search/intake engine. Replace with your own knowledge base.
+</div>
+
+<div id="search-bar">
+  <input id="search-input" type="text" placeholder="🔍  Search T-Code / term / order type…" oninput="doSearch()" />
+  <span id="search-count"></span>
+</div>
+
+<div id="layout">
+<nav id="sidebar">
+<!-- {{SIDEBAR_NAV}} -->
+</nav>
+
+<main id="content">
+<!-- {{ARTICLES_CONTENT}} -->
+</main>
+</div>
+
+<script>
+// Client-side filter — hides articles whose text/tags don't match the query.
+function doSearch() {
+  const _raw = document.getElementById('search-input').value.trim().toLowerCase();
+  const q = (typeof window.normQ === 'function') ? window.normQ(_raw) : _raw;
+  const arts = document.querySelectorAll('.article');
+  let shown = 0;
+  arts.forEach(a => {
+    const hay = (a.textContent + ' ' + (a.getAttribute('data-tags') || '')).toLowerCase();
+    const hit = !q || (typeof window.matchQ === 'function' ? window.matchQ(hay, q) : hay.includes(q));
+    a.classList.toggle('hidden', !hit);
+    if (hit) shown++;
+  });
+  const cnt = document.getElementById('search-count');
+  cnt.textContent = q ? `${shown} match${shown === 1 ? '' : 'es'}` : '';
+}
+
+// Smooth-scroll for sidebar links.
+document.querySelectorAll('.nav-link').forEach(link => {
+  link.addEventListener('click', e => {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) { e.preventDefault(); el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+  });
+});
+
+// ── Server-less edit mode — fix text in place, add articles, save to the file ──
+// Save uses the File System Access API (Chrome/Edge: writes back in place); other
+// browsers fall back to downloading the updated archive.html. No server needed.
+const _CATS  = ['기초용어','프로세스','기술설정','트러블슈팅','운영참조매뉴얼'];
+const _BADGE = {'기초용어':'b-기초','프로세스':'b-프로세스','기술설정':'b-기술','트러블슈팅':'b-트러블','운영참조매뉴얼':'b-매뉴얼'};
+let _fileHandle = null;
+
+const _EDIT_SEL = '#header h1, #header .subtitle, .at, .st, .dt, .hl-box, .warn-box, .tbl td, .tbl th, .tag, .fb';
+// Editing is delegated: only the element you click becomes contenteditable at that
+// moment. Bulk-toggling the attribute on every element froze large archives
+// (thousands of nodes = one style/layout pass each) — this stays O(1) at any size.
+function toggleEdit(on) {
+  document.body.classList.toggle('editing', on);
+  if (!on) document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+}
+document.addEventListener('click', e => {
+  if (!document.body.classList.contains('editing')) return;
+  const t = e.target.closest(_EDIT_SEL);
+  if (!t) return;
+  if (e.target.closest('a')) e.preventDefault();   // while editing, edit links instead of following them
+  if (t.isContentEditable) return;
+  t.setAttribute('contenteditable','true'); t.focus();
+  if (document.caretRangeFromPoint) { const r = document.caretRangeFromPoint(e.clientX, e.clientY); if (r) { const s = getSelection(); s.removeAllRanges(); s.addRange(r); } }
+});
+document.addEventListener('focusout', e => {
+  const t = e.target;
+  if (t && t.nodeType === 1 && t.getAttribute('contenteditable') === 'true') t.removeAttribute('contenteditable');
+});
+function _esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _slug(s){
+  const base = (s.toLowerCase().replace(/[^a-z0-9가-힣]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)) || 'note';
+  let id = base, n = 2; while (document.getElementById(id)) id = base + '-' + (n++); return id;
+}
+function _today(){ return new Date().toISOString().slice(0,10); }
+
+function openAdd(){
+  document.getElementById('add-cat').innerHTML = _CATS.map(c=>`<option>${c}</option>`).join('');
+  ['add-title','add-tags','add-body'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAdd(){ document.getElementById('add-modal').classList.remove('open'); }
+
+function addArticle(){
+  const title = document.getElementById('add-title').value.trim();
+  const cat   = document.getElementById('add-cat').value;
+  const tags  = document.getElementById('add-tags').value.trim();
+  const body  = document.getElementById('add-body').value.trim();
+  if(!title){ alert('제목을 입력하세요'); return; }
+  const id = _slug(title), today = _today();
+  const tagHtml  = tags ? tags.split(/\s+/).map(t=>`<span class="tag">${_esc(t)}</span>`).join('') : '';
+  const bodyHtml = (body||'(내용 없음)').split(/\n\n+/).map(p=>`<p>${_esc(p).replace(/\n/g,'<br>')}</p>`).join('');
+  const art = document.createElement('article');
+  art.className='article'; art.id=id;
+  art.setAttribute('data-tags', (title+' '+tags+' '+cat).trim());
+  art.innerHTML = `\n  <div class="ah">\n    <div class="at">${_esc(title)}</div>\n    <span class="badge ${_BADGE[cat]}">${cat}</span>\n    <span class="db">${today}</span>\n  </div>\n  <div class="tags">${tagHtml}</div>\n  <div class="sec"><div class="dt">${bodyHtml}</div></div>\n`;
+  // insert at the end of that category's section in #content + bump the count
+  const hdr = [...document.querySelectorAll('#content .cat-header')].find(h=>h.textContent.includes(cat));
+  if (hdr){
+    let n = hdr.nextElementSibling, last = hdr;
+    while (n && !n.classList.contains('cat-header')){ last = n; n = n.nextElementSibling; }
+    last.after(art);
+    const cnt = hdr.querySelector('.cnt'); if (cnt) cnt.textContent = (parseInt(cnt.textContent||'0',10)+1);
+  } else { document.getElementById('content').appendChild(art); }
+  // sidebar nav link
+  const navHdr = [...document.querySelectorAll('#sidebar .nav-cat-title')].find(x=>x.textContent.includes(cat));
+  if (navHdr){
+    let n = navHdr.nextElementSibling, last = navHdr;
+    while (n && !n.classList.contains('nav-cat-title')){ last = n; n = n.nextElementSibling; }
+    const a = document.createElement('a'); a.className='nav-link'; a.href='#'+id;
+    a.innerHTML = `${_esc(title)}<span class="nd">${today}</span>`;
+    a.addEventListener('click', e=>{ const el=document.getElementById(id); if(el){e.preventDefault(); el.scrollIntoView({behavior:'smooth',block:'start'});} });
+    last.after(a);
+  }
+  closeAdd();
+  art.scrollIntoView({behavior:'smooth', block:'center'});
+  _toast('추가됨 ✓ — 💾저장을 눌러 파일에 기록하세요');
+}
+
+function _toast(msg){
+  const t = document.createElement('div'); t.className='toast'; t.setAttribute('data-noexport','');
+  t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
+}
+
+// Remember the chosen file (IndexedDB) so after the first pick it saves back to the
+// same file with no folder-hunting.
+// ⚠ The handle key is app-unique (_FS_KEY). A shared key ('f') once collided with the
+// dashboard editor in the same folder (file:// pages share one IndexedDB), so an archive
+// save silently overwrote task-board.html. Key isolation + filename validation prevent it.
+const _FS_KEY='tpb-archive';
+function _fsOpen(){ return new Promise(r=>{ const q=indexedDB.open('tbfs',1); q.onupgradeneeded=()=>q.result.createObjectStore('h'); q.onsuccess=()=>r(q.result); q.onerror=()=>r(null); }); }
+async function _fsLoad(){ try{ const db=await _fsOpen(); if(!db) return null; return await new Promise(r=>{ const g=db.transaction('h').objectStore('h').get(_FS_KEY); g.onsuccess=()=>r(g.result||null); g.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function _fsStore(h){ try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').put(h,_FS_KEY); }catch(e){} }
+async function _fsForget(){ window._fh=null; try{ const db=await _fsOpen(); if(db) db.transaction('h','readwrite').objectStore('h').delete(_FS_KEY); }catch(e){} }
+async function _pickFileHandle(name){
+  let h = window._fh || await _fsLoad();
+  if (h && h.name !== name) h = null;   // stale/foreign handle (e.g. old shared key) → re-pick
+  if (h){ try{ const o={mode:'readwrite'}; if(await h.queryPermission(o)!=='granted' && await h.requestPermission(o)!=='granted') h=null; }catch(e){ h=null; } }
+  if (!h){
+    h = await window.showSaveFilePicker({ id:_FS_KEY, startIn:'documents', suggestedName:name, types:[{description:'HTML', accept:{'text/html':['.html']}}] });
+    if (h.name !== name) _toast('⚠ 선택한 파일명이 '+name+' 이 아닙니다 — 저장 위치를 확인하세요');
+    await _fsStore(h);
+  }
+  window._fh = h; return h;
+}
+async function saveFile(){
+  // Save-stamp: written into the saved file's <html data-saved> AND remembered in
+  // localStorage. On next load we compare the two — a mismatch means the save landed
+  // in a DIFFERENT file than the one being viewed (the #1 "my edits rolled back" cause).
+  const stamp = 'sv-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
+  const doc = document.documentElement.cloneNode(true);
+  doc.setAttribute('data-saved', stamp);
+  doc.querySelectorAll('[data-noexport], #ai-toggle, #ai-panel').forEach(el=>el.remove());      // strip edit UI + (server-injected) AI panel
+  doc.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+  doc.querySelectorAll('.article.hidden').forEach(el=>el.classList.remove('hidden'));            // un-hide any search-filtered articles
+  const b = doc.querySelector('body'); if (b) b.classList.remove('editing');
+  const html = '<!DOCTYPE html>\n' + doc.outerHTML + '\n';
+  if (window.showSaveFilePicker){
+    try {
+      const h = await _pickFileHandle('archive.html');   // 파일 위치 기억(첫 선택 후 폴더 안 찾음)
+      const w = await h.createWritable(); await w.write(html); await w.close();
+      const f = await h.getFile();                       // round-trip check: did the bytes land?
+      if (f.size !== new Blob([html]).size){ _toast('⚠ 저장 검증 실패 — 기록된 크기가 다릅니다. 다시 시도하세요'); return; }
+      try{ localStorage.setItem('tpb-archive-saved-stamp', stamp); }catch(_e){}
+      toggleEdit(false); _toast('파일에 저장됨 ✓ ('+h.name+')'); return;
+    } catch(e){
+      if (e.name==='AbortError'){ _toast('⚠ 저장 취소됨 — 파일에 기록되지 않았습니다'); return; }   // never fail silently
+      _toast('⚠ 직접 저장 실패('+e.name+') — 다운로드로 대체합니다');
+    }
+  }
+  const a = document.createElement('a');                                                          // fallback: download
+  a.href = URL.createObjectURL(new Blob([html],{type:'text/html'})); a.download='archive.html'; a.click();
+  try{ localStorage.setItem('tpb-archive-saved-stamp', stamp); }catch(_e){}  // banner on next load reminds to overwrite the original
+  toggleEdit(false); _toast('다운로드됨 — 원본 archive.html에 덮어쓰세요');
+}
+// On load: if our last save-stamp is NOT in this file, the save went somewhere else — warn.
+document.addEventListener('DOMContentLoaded', ()=>{
+  // file:// (double-clicked) blocks in-place write (File System Access). In-place save needs
+  // http://localhost or https; on file:// the button can only download a copy.
+  if (!window.showSaveFilePicker || location.protocol==='file:'){
+    const b=document.getElementById('btn-save');
+    if(b){ b.textContent='💾 다운로드'; b.title='On file:// the browser cannot write back to the original — it only downloads a copy. For one-click in-place save, open via a local server (http://localhost).'; }
+    const h=document.getElementById('edit-hint'); if(h) h.classList.add('is-file');
+  }
+  try{
+    const want = localStorage.getItem('tpb-archive-saved-stamp');
+    if (!want || document.documentElement.getAttribute('data-saved')===want) return;
+    const d = document.createElement('div'); d.setAttribute('data-noexport','');
+    d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#7c2d12;color:#fff;padding:10px 16px;font-size:13px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap';
+    d.innerHTML='⚠ <b>마지막 💾저장이 이 파일에 반영되어 있지 않습니다.</b> 저장이 다른 위치의 파일로 갔거나, 다운로드본을 아직 원본에 덮어쓰지 않은 상태일 수 있어요.';
+    const btn = document.createElement('button'); btn.textContent='저장 위치 재선택';
+    btn.style.cssText='background:#fff;color:#7c2d12;border:0;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700';
+    btn.onclick = async()=>{ await _fsForget(); localStorage.removeItem('tpb-archive-saved-stamp'); d.remove(); _toast('기억한 저장 위치를 지웠습니다 — 다음 💾저장 때 파일을 다시 고르세요'); };
+    const x = document.createElement('button'); x.textContent='확인(닫기)';
+    x.style.cssText='background:transparent;color:#fff;border:1px solid #ffffff88;border-radius:6px;padding:4px 10px;cursor:pointer';
+    x.onclick = ()=>{ localStorage.removeItem('tpb-archive-saved-stamp'); d.remove(); };
+    d.append(btn,x); document.body.appendChild(d);
+  }catch(e){}
+});
+</script>
+
+<div id="edit-fab" data-noexport>
+  <button id="btn-edit" onclick="toggleEdit(true)" title="서버 없이 직접 편집">✏️ 편집</button>
+  <button id="btn-add" onclick="openAdd()">➕ 새 글</button>
+  <button id="btn-save" onclick="saveFile()">💾 저장</button>
+  <button id="btn-cancel" onclick="toggleEdit(false)">취소</button>
+</div>
+<div id="edit-hint" data-noexport>✏️ <b>편집 모드</b> — 글을 클릭해 바로 고치고, <b>➕새 글</b>로 추가, <b>💾저장</b>으로 파일에 기록. <b>처음 한 번만</b> 파일을 골라 "덮어쓰기" 확인하면 이후엔 위치를 기억해 한 번에 저장 — 덮어쓰기는 내 편집을 내 파일에 반영하는 것이라 안전합니다. <b class="hint-srv">⚠ 원본에 바로 저장하려면 로컬 서버(<code>http://localhost</code>)나 https로 여세요. 더블클릭(file://)으로 연 경우 💾는 "사본 다운로드"만 되어, 받은 파일로 원본을 덮어써야 반영됩니다. (For one-click in-place save, open via a local server — file:// can only download a copy.)</b></div>
+<div id="add-modal" data-noexport>
+  <div id="add-card">
+    <h3>➕ 새 글 추가</h3>
+    <label>제목</label><input id="add-title" placeholder="예) 월말 마감 체크리스트">
+    <label>카테고리</label><select id="add-cat"></select>
+    <label>태그 (공백으로 구분 — 검색 키워드)</label><input id="add-tags" placeholder="결산 월말 체크리스트">
+    <label>내용</label><textarea id="add-body" placeholder="본문. 빈 줄로 문단 구분."></textarea>
+    <div class="row">
+      <button onclick="closeAdd()" style="background:#e2e8f0;color:#334155">취소</button>
+      <button onclick="addArticle()" style="background:#1d4ed8;color:#fff">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Obsidian-pattern backlink panel + tag-chip filter (visualizes data-related / tags) — 2026-06-24 ── -->
+<style>
+.rel-panel{margin-top:14px;padding:9px 12px;border-top:1px dashed #cbd5e1;background:#f8fafc;border-radius:0 0 6px 6px;font-size:.8rem}
+.rel-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:3px 0}
+.rel-lbl{color:#64748b;font-weight:700;font-size:.72rem;margin-right:4px;white-space:nowrap}
+.rel-chip{display:inline-block;padding:2px 9px;background:#e0e7ff;color:#3730a3;text-decoration:none;font-size:.75rem;border:1px solid #c7d2fe;border-radius:11px;cursor:pointer}
+.rel-chip:hover{background:#c7d2fe}
+.tags .tag{cursor:pointer}
+.tags .tag:hover{filter:brightness(.95)}
+.collapsed .rel-panel{display:none}
+</style>
+<script>
+// Render data-related (inter-article links) as an on-screen backlink panel, and make tags click-to-filter.
+// Panels are rendered dynamically (data-noexport = stripped on save) — the source of truth is each article's data-related attribute.
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var arts = [].slice.call(document.querySelectorAll('article.article'));
+    var byId = {}; arts.forEach(function(a){ if(a.id) byId[a.id]=a; });
+    var back = {};
+    arts.forEach(function(a){
+      var rel=(a.dataset.related||'').trim(); if(!rel) return;
+      rel.split(/\s+/).forEach(function(t){ (back[t]=back[t]||[]).push(a.id); });
+    });
+    function title(id){ var a=byId[id]; var t=a&&a.querySelector('.at'); return t?t.textContent:id; }
+    function chip(id){ return byId[id] ? '<a href="#'+id+'" class="rel-chip" data-goto="'+id+'">'+title(id)+'</a>' : ''; }
+    arts.forEach(function(a){
+      var fwd=(a.dataset.related||'').trim().split(/\s+/).filter(function(x){return x&&byId[x];});
+      var bk=(back[a.id]||[]).filter(function(x){return byId[x] && fwd.indexOf(x)<0;});
+      if(!fwd.length && !bk.length) return;
+      var p=document.createElement('div'); p.className='rel-panel'; p.setAttribute('data-noexport','');
+      var h='';
+      if(fwd.length) h+='<div class="rel-row"><span class="rel-lbl">🔗 Related</span>'+fwd.map(chip).join('')+'</div>';
+      if(bk.length)  h+='<div class="rel-row"><span class="rel-lbl">↩ Referenced by</span>'+bk.map(chip).join('')+'</div>';
+      p.innerHTML=h; a.appendChild(p);
+    });
+    document.addEventListener('click', function(e){
+      if(document.body.classList.contains('editing')) return;
+      var c=e.target.closest('.rel-chip');
+      if(c){ e.preventDefault(); var t=byId[c.getAttribute('data-goto')]; if(t){ t.classList.remove('collapsed'); t.scrollIntoView({behavior:'smooth',block:'start'}); } return; }
+      var tag=e.target.closest('.tags .tag');
+      if(tag){ e.preventDefault(); var inp=document.getElementById('search-input'); if(inp){ inp.value=tag.textContent.replace(/^#/,'').trim(); if(typeof doSearch==='function') doSearch(); window.scrollTo({top:0,behavior:'smooth'}); } }
+    });
+  });
+})();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════
+     탐색 층(Navigator) — 2026-08-20 추가
+     목적: 정본 파일(archive.html 한 벌)은 그대로 두고 "찾아 들어가는 보기 층"만 얹는다.
+       ① 🧭 색인(허브)  — T-Code / 테이블 / 케이스 / 주제 / 최근 역인덱스.
+                          파일에 저장하지 않고 로드할 때 DOM에서 매번 계산
+                          → 아티클을 추가·수정해도 자동 반영(사람이 동기화할 목록 0개).
+       ② 📄 문서 모드   — 사이드바·색인에서 고른 글 "한 편만" 표시. :target(URL 해시) 기반이라
+                          딥링크·뒤로가기가 그대로 동작.
+       ③ 📚 전체 모드   — 기존 롱페이지 동작 그대로(검색어를 넣으면 자동 전환).
+     불변 규칙(중요):
+       · 주입하는 DOM은 전부 data-noexport  → 💾저장본에 이 층의 흔적이 남지 않음
+       · 표시 상태는 body 클래스(mode-*)와 전용 클래스로만 표현 → 아티클 HTML 무손상
+       · 초기화가 실패해도 기존 보기(전체)로 그대로 동작 (try/catch)
+     ══════════════════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── 모드 스위치 (검색바 우측) ── */
+#nav-modes { display: flex; gap: 6px; margin-left: auto; }
+#nav-modes button { font: inherit; font-size: 12px; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+#nav-modes button:hover { background: #e2e8f0; border-color: #94a3b8; }
+#nav-modes button.on { background: #1a2744; border-color: #1a2744; color: #fff; }
+
+/* ── 사이드바: 색인 버튼 + 빠른 찾기 + 카테고리 접기 ── */
+#nav-side-top { position: sticky; top: 0; z-index: 5; background: #fff; padding: 9px 10px; border-bottom: 1px solid #e2e8f0; }
+#nav-hub-btn { width: 100%; font: inherit; font-size: 12px; font-weight: 700; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 8px; cursor: pointer; margin-bottom: 6px; }
+#nav-hub-btn:hover { background: #dbeafe; }
+#nav-filter { width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; font-size: 12px; outline: none; }
+#nav-filter:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #dbeafe; }
+.nav-cat-title { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+.nav-cat-title::before { content: '▾'; font-size: 9px; color: #94a3b8; }
+.nav-cat-title.nav-collapsed::before { content: '▸'; }
+.nav-cnt { margin-left: auto; background: #e2e8f0; color: #475569; border-radius: 10px; padding: 0 6px; font-size: 9.5px; font-weight: 700; }
+.nav-link.nav-hide, .nav-link.nav-f-hide, .nav-cat-title.nav-f-hide { display: none; }
+.nav-link.nav-on { background: #eff6ff; border-left-color: #1d4ed8; color: #1d4ed8; font-weight: 700; }
+
+/* ── 모드별 표시 규칙 (클래스를 아티클에 심지 않고 CSS로만 제어) ── */
+body.mode-hub #content .cat-header, body.mode-hub #content article.article { display: none !important; }
+body.mode-doc #content .cat-header { display: none !important; }
+body.mode-doc #content article.article:not(:target) { display: none !important; }
+body:not(.mode-hub) #nav-hub { display: none; }
+body:not(.mode-doc) #doc-bar { display: none; }
+body.mode-hub #fold-all, body.mode-doc #fold-all { display: none; }
+
+/* ── 문서 모드 상단 바 ── */
+#doc-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+#doc-bar button { font: inherit; font-size: 12px; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+#doc-bar button:hover:not(:disabled) { background: #e2e8f0; border-color: #94a3b8; }
+#doc-bar button:disabled { opacity: .4; cursor: default; }
+#doc-bar .db-crumb { font-size: 11.5px; color: #94a3b8; }
+#doc-bar .db-title { font-size: 12.5px; font-weight: 700; color: #1e293b; }
+#doc-bar .db-sp { margin-left: auto; display: flex; gap: 6px; }
+
+/* ── 허브(색인) ── */
+#nav-hub { max-width: 1180px; }
+.hub-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #1a2744; }
+.hub-h h2 { font-size: 16px; font-weight: 700; color: #1a2744; }
+.hub-h .sub { font-size: 11px; color: #94a3b8; }
+.hub-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.hub-tabs button { font: inherit; font-size: 12.5px; font-weight: 600; color: #475569; background: #fff; border: 1px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; cursor: pointer; }
+.hub-tabs button:hover { background: #f1f5f9; }
+.hub-tabs button.on { background: #1a2744; border-color: #1a2744; color: #fff; }
+#hub-filter { width: 340px; max-width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; font-size: 12.5px; outline: none; margin-bottom: 14px; }
+#hub-filter:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px #dbeafe; }
+.hub-sec { margin-bottom: 16px; }
+.hub-fam { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 7px; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0; }
+.hub-codes { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 6px; align-items: start; }
+details.hub-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 7px; }
+details.hub-item > summary { cursor: pointer; padding: 7px 10px; font-family: 'Consolas', monospace; font-weight: 700; font-size: 12.5px; color: #7c3aed; display: flex; align-items: center; gap: 6px; list-style: none; }
+details.hub-item > summary::-webkit-details-marker { display: none; }
+details.hub-item > summary .n { margin-left: auto; background: #f1f5f9; color: #64748b; border-radius: 10px; padding: 0 7px; font-family: inherit; font-size: 10px; font-weight: 700; }
+details.hub-item[open] > summary { border-bottom: 1px solid #f1f5f9; }
+details.hub-item .lk { display: block; padding: 6px 10px 6px 14px; font-size: 12px; color: #374151; text-decoration: none; border-top: 1px solid #f8fafc; line-height: 1.35; }
+details.hub-item .lk:hover { background: #f0f9ff; color: #1d4ed8; }
+details.hub-item.tbl > summary { color: #0f766e; }
+details.hub-item.std > summary { color: #1d4ed8; }
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 8px; }
+a.hub-card { display: block; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444; border-radius: 8px; padding: 10px 12px; text-decoration: none; }
+a.hub-card:hover { border-color: #3b82f6; border-left-color: #ef4444; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+a.hub-card .t { font-size: 12.5px; font-weight: 700; color: #1e293b; line-height: 1.4; }
+a.hub-card .m { font-size: 10.5px; color: #94a3b8; margin-top: 5px; line-height: 1.4; }
+.hub-topic { background: #fff; border: 1px solid #e2e8f0; border-radius: 9px; padding: 11px 13px; margin-bottom: 8px; }
+.hub-topic .tt { font-size: 13px; font-weight: 700; color: #1a2744; margin-bottom: 7px; }
+.hub-topic .tt .n { background: #f1f5f9; color: #64748b; border-radius: 10px; padding: 0 7px; font-size: 10px; margin-left: 5px; }
+.hub-topic a.lk { display: inline-block; margin: 2px 5px 2px 0; padding: 3px 9px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 11px; font-size: 11.5px; color: #374151; text-decoration: none; }
+.hub-topic a.lk:hover { background: #dbeafe; color: #1d4ed8; border-color: #bfdbfe; }
+a.hub-row { display: flex; gap: 10px; align-items: center; padding: 7px 11px; background: #fff; border: 1px solid #e2e8f0; border-radius: 7px; margin-bottom: 5px; text-decoration: none; }
+a.hub-row:hover { border-color: #3b82f6; background: #f0f9ff; }
+a.hub-row .t { font-size: 12.5px; color: #1e293b; font-weight: 600; flex: 1; line-height: 1.35; }
+a.hub-row .d { font-size: 10.5px; color: #94a3b8; white-space: nowrap; }
+.hub-note { font-size: 11.5px; color: #94a3b8; margin-bottom: 10px; line-height: 1.5; }
+</style>
+<script>
+(function(){
+  'use strict';
+  var LS_MODE = 'archive-nav-mode', LS_CAT = 'archive-nav-cats';
+  // 흔한 표기 변이 정규화 — 검색어에만 적용(색인 원문은 그대로 둔다). 실사례: "버젼"으로 쳐도 0건이던 문제.
+  var SYN = { '버젼': '버전' };
+  function normQ(q){
+    q = (q || '').toLowerCase();
+    Object.keys(SYN).forEach(function(k){ q = q.split(k).join(SYN[k]); });
+    return q;
+  }
+  window.normQ = normQ;   // doSearch(맨 위 검색창)는 이 블록보다 먼저 정의된 별도 스크립트라 전역으로 공유
+  // 여러 단어 검색 = AND(전부 포함, 순서·인접 무관). 예: "매출품의 버전"은 본문에 그 문구가 붙어있지 않아도
+  // "매출품의"와 "버전"이 각각 어딘가에 있으면 매칭 — 종전 "문구 그대로 붙어있어야" 방식이던 실제 결함 수정.
+  function matchQ(text, q){
+    if(!q) return true;
+    var toks = q.split(/\s+/).filter(Boolean);
+    var t = (text || '').toLowerCase();
+    return toks.every(function(tok){ return t.indexOf(tok) >= 0; });
+  }
+  window.matchQ = matchQ;
+  var $  = function(s, r){ return (r || document).querySelector(s); };
+  var $$ = function(s, r){ return [].slice.call((r || document).querySelectorAll(s)); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+
+  var arts = [], byId = {}, groups = [], IX = null, hubReady = false, curTab = 'case', cur = null;
+
+  // ── 아티클 메타 추출 ──
+  function T(a){ var e = a.querySelector('.at');    return e ? e.textContent.trim() : (a.id || '(제목 없음)'); }
+  function D(a){ var e = a.querySelector('.db');    return e ? e.textContent.trim() : ''; }
+  function B(a){ var e = a.querySelector('.badge'); return e ? e.textContent.trim() : ''; }
+
+  // ── 코드 인식 패턴 (본문에서 T-Code·테이블을 자동 수집) ──
+  var RE_Z       = /\bZ[A-Z]{1,3}\d{3,4}[A-Z]?\b/g;   // 3자리 채번(ZBCO070 등)도 포함
+  var RE_STD_T   = /\b(VA0[1-3]|VL0[12]N|VL0[1-9]|VF0[1-9]|VF1[01]|FD3[0-9]|FBL5N|FB0[1-9]|VKM[1-5]|SE1[1368]N?|SE3[78]|SE80|SE93|ST22|SM3[0-9]|SM12|SU0[13]|SU53|SPRO|STMS|SCC4|SOST|SP01|MB5[12]|MMBE|MM0[1-3]|XD0[1-3]|VD0[1-3]|VOV8|OVA[0-9])\b/g;
+  var RE_STD_TBL = /\b(VBAK|VBAP|VBEP|VBFA|VBUK|VBUP|LIKP|LIPS|VBRK|VBRP|KNA1|KNVV|KNKK|KNB1|KNVP|MARA|MARC|MVKE|MAKT|BKPF|BSEG|BSID|BSAD|AUFK|COEP|EKKO|EKPO|EBAN|UKMBP_CMS_SGM|UKM_ITEM|TVAK|TVAP|TVKO|T001)\b/g;
+
+  // ── 주제 클러스터 (한 글이 여러 주제에 속할 수 있다 = 위키형의 약점을 피하는 지점) ──
+  var TOPICS = [
+    { t:'💳 여신·신용',        k:['여신','신용','credit','fd32','fd33','vkm4','한도','블록','fscm'] },
+    { t:'📝 매출품의·결재',    k:['매출품의','품의','결재','상신','전결','iris','승인'] },
+    { t:'📦 오더·출고·납품',   k:['오더','출고','납품','delivery','vl0','인수증','이동요청'] },
+    { t:'🧾 세금계산서·빌링',  k:['세금계산서','빌링','계산서','역발행','정발행','vf0','매출인식'] },
+    { t:'↩️ 취소·반품',        k:['취소','반품','무상','반제','대체'] },
+    { t:'📅 결산·월말',        k:['결산','월말','마감','d+1','d+2','전기'] },
+    { t:'🛒 구매·매입',        k:['구매','매입','발주','ekko','ekpo','선구매'] },
+    { t:'📊 계획·CO-PA·원가',  k:['판매계획','co-pa','원가','수익성','zbco','zbsd021','롤링'] },
+    { t:'🔐 권한·사용자',      k:['권한','su01','역할','사용자','부여'] },
+    { t:'⚙️ 배치·인터페이스',  k:['배치','sm37','인터페이스','i/f','잡','스케줄','연계'] },
+    { t:'🏗️ 개발·CTS·이행',    k:['cts','전송요청','이행','정보처리의뢰서','abap','개발','dump','st22'] },
+    { t:'👤 마스터데이터',     k:['마스터','자재마스터','고객마스터','kna1','mara','조직'] }
+  ];
+
+  // ══ 주입 ══════════════════════════════════════════════════════════════
+  function injectModeBar(){
+    var bar = $('#search-bar'); if(!bar) return;
+    var w = document.createElement('span');
+    w.id = 'nav-modes'; w.setAttribute('data-noexport','');
+    w.innerHTML = '<button type="button" data-mode="hub" title="색인 화면으로 (Esc)">🧭 색인</button>' +
+                  '<button type="button" data-mode="all" title="한 장에 전부 — 기존 방식(Ctrl+F 통검색)">📚 전체</button>';
+    bar.appendChild(w);
+  }
+
+  function injectSidebar(){
+    var sb = $('#sidebar'); if(!sb) return;
+    var top = document.createElement('div');
+    top.id = 'nav-side-top'; top.setAttribute('data-noexport','');
+    top.innerHTML = '<button type="button" id="nav-hub-btn">🧭 색인으로</button>' +
+                    '<input id="nav-filter" type="text" placeholder="제목 빠른 찾기…">';
+    sb.insertBefore(top, sb.firstChild);
+
+    // 카테고리 그룹은 DOM을 재구성하지 않고 "메모리에서만" 묶는다(저장본 무손상)
+    var g = null;
+    [].slice.call(sb.children).forEach(function(el){
+      if(el.classList.contains('nav-cat-title')){ g = { title: el, links: [] }; groups.push(g); }
+      else if(el.classList.contains('nav-link') && g){ g.links.push(el); }
+    });
+    var open = {}; try { open = JSON.parse(localStorage.getItem(LS_CAT) || '{}'); } catch(e){}
+    groups.forEach(function(gr, i){
+      var c = document.createElement('span');
+      c.className = 'nav-cnt'; c.setAttribute('data-noexport',''); c.textContent = gr.links.length;
+      gr.title.appendChild(c);
+      setGroup(gr, open[i] !== false);
+    });
+  }
+
+  function injectBars(){
+    var c = $('#content'); if(!c) return;
+    var d = document.createElement('div');
+    d.id = 'doc-bar'; d.setAttribute('data-noexport','');
+    d.innerHTML = '<button type="button" class="db-hub">🧭 색인</button>' +
+                  '<span class="db-crumb"></span><span class="db-title"></span>' +
+                  '<span class="db-sp">' +
+                    '<button type="button" class="db-prev">◀ 이전</button>' +
+                    '<button type="button" class="db-next">다음 ▶</button>' +
+                    '<button type="button" class="db-all">📚 전체에서 보기</button>' +
+                  '</span>';
+    c.insertBefore(d, c.firstChild);
+
+    var h = document.createElement('div');
+    h.id = 'nav-hub'; h.setAttribute('data-noexport','');
+    h.innerHTML = '<div class="hub-h"><h2>🧭 아카이브 색인</h2><span class="sub"></span></div>' +
+                  '<div class="hub-tabs"></div>' +
+                  '<input id="hub-filter" type="text" placeholder="색인 안에서 거르기 — 코드·제목·태그">' +
+                  '<div id="hub-body"></div>';
+    c.insertBefore(h, d.nextSibling);
+  }
+
+  // ══ 역인덱스 (로드할 때 DOM에서 계산 — 파일에 저장하지 않는다) ═══════════
+  function buildIndex(){
+    if(IX) return IX;
+    var tcode = {}, table = {};
+    function add(map, k, id){ (map[k] = map[k] || {})[id] = 1; }
+    arts.forEach(function(a){
+      if(!a.id) return;
+      var txt = (T(a) + ' ' + (a.dataset.tags || '') + ' ' + a.textContent).toUpperCase(), m;
+      RE_Z.lastIndex = 0;
+      while((m = RE_Z.exec(txt))){ (/^ZT/.test(m[0]) ? add(table, m[0], a.id) : add(tcode, m[0], a.id)); }
+      RE_STD_T.lastIndex = 0;
+      while((m = RE_STD_T.exec(txt))) add(tcode, m[0], a.id);
+      RE_STD_TBL.lastIndex = 0;
+      while((m = RE_STD_TBL.exec(txt))) add(table, m[0], a.id);
+    });
+    IX = { tcode: tcode, table: table };
+    return IX;
+  }
+
+  function famT(c){
+    if(/^ZR/.test(c)) return '🔎 조회·리포트 (ZR)';
+    if(/^ZB/.test(c)) return '⚙️ 배치·프로그램 (ZB)';
+    if(/^ZE/.test(c)) return '🖥️ 화면·모듈풀 (ZE)';
+    if(/^Z/.test(c))  return '🧩 기타 Z';
+    return '📗 SAP 표준 T-Code';
+  }
+  function famTbl(c){ return /^ZT/.test(c) ? '🗄️ 커스텀 테이블 (ZT)' : '📗 SAP 표준 테이블'; }
+
+  function itemHtml(code, ids, cls){
+    ids = ids.slice().sort(function(x, y){ return byId[x]._ix - byId[y]._ix; });
+    var links = ids.map(function(id){ return '<a class="lk" href="#' + id + '">' + esc(T(byId[id])) + '</a>'; }).join('');
+    var k = (code + ' ' + ids.map(function(id){ return T(byId[id]) + ' ' + (byId[id].dataset.tags || ''); }).join(' ')).toLowerCase();
+    return '<details class="hub-item ' + cls + '" data-k="' + esc(k) + '"><summary>' + esc(code) +
+           '<span class="n">' + ids.length + '</span></summary>' + links + '</details>';
+  }
+
+  function renderCodes(map, famFn, order, cls){
+    var byFam = {};
+    Object.keys(map).forEach(function(c){ (byFam[famFn(c)] = byFam[famFn(c)] || []).push(c); });
+    var html = '<div class="hub-note">본문·태그에서 자동 수집한 역인덱스입니다. 코드를 펼치면 그 코드를 다루는 글이 전부 나옵니다.</div>';
+    order.forEach(function(f){
+      var list = byFam[f]; if(!list || !list.length) return;
+      list.sort(function(x, y){
+        var d = Object.keys(map[y]).length - Object.keys(map[x]).length;
+        return d || (x < y ? -1 : 1);
+      });
+      html += '<div class="hub-sec"><div class="hub-fam">' + esc(f) + ' <span style="color:#cbd5e1">· ' + list.length + '</span></div><div class="hub-codes">' +
+              list.map(function(c){ return itemHtml(c, Object.keys(map[c]), /^Z/.test(c) ? cls : 'std'); }).join('') +
+              '</div></div>';
+    });
+    return html;
+  }
+
+  function renderCases(){
+    var list = arts.filter(function(a){ return a.id && a.querySelector('.badge.b-트러블'); });
+    list.sort(function(x, y){ return D(y).localeCompare(D(x)); });
+    return '<div class="hub-note">겪은 문제와 해결 기록 ' + list.length + '건 — 최근 순. 카드를 누르면 그 글만 펼쳐집니다.</div><div class="hub-grid">' +
+      list.map(function(a){
+        var tags = $$('.tags .tag', a).slice(0, 4).map(function(t){ return t.textContent.trim(); }).join(' ');
+        var k = (T(a) + ' ' + tags + ' ' + (a.dataset.tags || '')).toLowerCase();
+        return '<a class="hub-card" href="#' + a.id + '" data-k="' + esc(k) + '">' +
+               '<div class="t">' + esc(T(a)) + '</div>' +
+               '<div class="m">' + esc(D(a)) + (tags ? ' · ' + esc(tags) : '') + '</div></a>';
+      }).join('') + '</div>';
+  }
+
+  function chip(a){ return '<a class="lk" href="#' + a.id + '">' + esc(T(a)) + '</a>'; }
+
+  function renderTopics(){
+    var html = '<div class="hub-note">카테고리는 글이 놓인 자리, 주제는 글을 가로지르는 묶음입니다. 한 글이 여러 주제에 동시에 들어갑니다.</div>';
+    // ① 카테고리(사이드바와 동일한 5분류)
+    var cats = {};
+    arts.forEach(function(a){ if(!a.id) return; var b = B(a) || '기타'; (cats[b] = cats[b] || []).push(a); });
+    html += '<div class="hub-sec"><div class="hub-fam">📂 카테고리</div>';
+    Object.keys(cats).forEach(function(b){
+      var k = (b + ' ' + cats[b].map(T).join(' ')).toLowerCase();
+      html += '<div class="hub-topic" data-k="' + esc(k) + '"><div class="tt">' + esc(b) +
+              '<span class="n">' + cats[b].length + '</span></div>' + cats[b].map(chip).join('') + '</div>';
+    });
+    html += '</div>';
+    // ② 주제 클러스터
+    html += '<div class="hub-sec"><div class="hub-fam">🧵 주제로 가로지르기</div>';
+    TOPICS.forEach(function(tp){
+      var hit = arts.filter(function(a){
+        if(!a.id) return false;
+        // data-tags(AI 검색용 키워드 덤프)가 아니라 제목 + 사람이 붙인 태그칩으로 매칭
+        // — 덤프로 매칭하면 한 주제가 전체의 절반을 삼켜 색인 구실을 못 한다.
+        var s = (T(a) + ' ' + $$('.tags .tag', a).map(function(t){ return t.textContent; }).join(' ')).toLowerCase();
+        return tp.k.some(function(w){ return s.indexOf(w) >= 0; });
+      });
+      if(!hit.length) return;
+      var k = (tp.t + ' ' + tp.k.join(' ') + ' ' + hit.map(T).join(' ')).toLowerCase();
+      html += '<div class="hub-topic" data-k="' + esc(k) + '"><div class="tt">' + esc(tp.t) +
+              '<span class="n">' + hit.length + '</span></div>' + hit.map(chip).join('') + '</div>';
+    });
+    return html + '</div>';
+  }
+
+  function renderRecent(){
+    var list = arts.filter(function(a){ return a.id; }).slice();
+    list.sort(function(x, y){ return D(y).localeCompare(D(x)); });
+    return '<div class="hub-note">기록 날짜 최신 순 전체 ' + list.length + '건.</div>' +
+      list.map(function(a){
+        var k = (T(a) + ' ' + B(a) + ' ' + (a.dataset.tags || '')).toLowerCase();
+        return '<a class="hub-row" href="#' + a.id + '" data-k="' + esc(k) + '">' +
+               '<span class="t">' + esc(T(a)) + '</span>' +
+               '<span class="d">' + esc(B(a)) + ' · ' + esc(D(a)) + '</span></a>';
+      }).join('');
+  }
+
+  function buildHub(){
+    if(hubReady) return;
+    var ix = buildIndex();
+    var nT = Object.keys(ix.tcode).length, nB = Object.keys(ix.table).length;
+    var sub = $('#nav-hub .hub-h .sub');
+    if(sub) sub.textContent = '아티클 ' + arts.length + ' · T-Code ' + nT + ' · 테이블 ' + nB +
+                              ' — 열 때마다 본문에서 자동 생성(파일에 저장되지 않음)';
+    var nCase = arts.filter(function(a){ return a.querySelector('.badge.b-트러블'); }).length;
+    var tabs = [
+      { id:'case',   t:'🔧 케이스 '  + nCase },
+      { id:'tcode',  t:'🧩 T-Code '  + nT },
+      { id:'table',  t:'🗄️ 테이블 '  + nB },
+      { id:'topic',  t:'📚 주제·분류' },
+      { id:'recent', t:'🕒 최근' }
+    ];
+    $('#nav-hub .hub-tabs').innerHTML = tabs.map(function(t){
+      return '<button type="button" data-tab="' + t.id + '">' + t.t + '</button>';
+    }).join('');
+    hubReady = true;
+    showTab(curTab);
+  }
+
+  function showTab(id){
+    curTab = id;
+    $$('#nav-hub .hub-tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === id); });
+    var ix = buildIndex(), html;
+    if(id === 'tcode')       html = renderCodes(ix.tcode, famT,   ['🔎 조회·리포트 (ZR)','⚙️ 배치·프로그램 (ZB)','🖥️ 화면·모듈풀 (ZE)','🧩 기타 Z','📗 SAP 표준 T-Code'], 'tc');
+    else if(id === 'table')  html = renderCodes(ix.table, famTbl, ['🗄️ 커스텀 테이블 (ZT)','📗 SAP 표준 테이블'], 'tbl');
+    else if(id === 'topic')  html = renderTopics();
+    else if(id === 'recent') html = renderRecent();
+    else                     html = renderCases();
+    $('#hub-body').innerHTML = html;
+    var f = $('#hub-filter'); if(f && f.value) hubFilter(f.value);
+  }
+
+  function hubFilter(q){
+    q = normQ((q || '').trim());
+    $$('#hub-body [data-k]').forEach(function(el){
+      el.style.display = matchQ(el.getAttribute('data-k'), q) ? '' : 'none';
+    });
+    $$('#hub-body .hub-sec').forEach(function(s){
+      var any = $$('[data-k]', s).some(function(e2){ return e2.style.display !== 'none'; });
+      s.style.display = any ? '' : 'none';
+    });
+  }
+
+  // ══ 모드 전환 ═════════════════════════════════════════════════════════
+  function resetSearch(){
+    var i = $('#search-input');
+    if(i && i.value){ i.value = ''; if(typeof doSearch === 'function') doSearch(); }
+    // 검색이 남긴 인라인 display 잔상 정리
+    arts.forEach(function(a){ if(a.style.display) a.style.display = ''; });
+    $$('#content .cat-header').forEach(function(h){ if(h.style.display) h.style.display = ''; });
+  }
+
+  function applyMode(m){
+    var b = document.body;
+    b.classList.remove('mode-hub','mode-doc','mode-all');
+    b.classList.add('mode-' + m);
+    $$('#nav-modes button').forEach(function(x){ x.classList.toggle('on', x.dataset.mode === m); });
+    if(m === 'hub'){ resetSearch(); buildHub(); cur = null; markNav(null); }
+    if(m === 'doc'){ refreshDoc(); }
+    if(m === 'all'){ cur = null; markNav(null); }
+    try { localStorage.setItem(LS_MODE, m === 'doc' ? 'hub' : m); } catch(e){}   // 문서 모드는 기억하지 않음 → 다음 방문은 색인부터
+    if(m !== 'all'){ var c = $('#content'); if(c) c.scrollTop = 0; }
+  }
+
+  function refreshDoc(){
+    var id = (location.hash || '').replace(/^#/, ''), a = byId[id];
+    if(!a){ applyMode('hub'); return; }
+    cur = a;
+    a.classList.remove('collapsed');                       // 문서 모드에선 항상 펼침
+    var bar = $('#doc-bar');
+    if(bar){
+      var p = arts[a._ix - 1], n = arts[a._ix + 1];
+      $('.db-crumb', bar).textContent = B(a) + ' ›';
+      $('.db-title', bar).textContent = T(a);
+      var pb = $('.db-prev', bar), nb = $('.db-next', bar);
+      pb.disabled = !p; nb.disabled = !n;
+      pb.title = p ? T(p) : ''; nb.title = n ? T(n) : '';
+    }
+    markNav(id);
+    var c = $('#content'); if(c) c.scrollTop = 0;
+  }
+
+  function go(id){
+    if(!byId[id]) return;
+    resetSearch();
+    if((location.hash || '').replace(/^#/, '') === id){ applyMode('doc'); }
+    else { location.hash = id; applyMode('doc'); }        // :target 기반 → 딥링크·뒤로가기 유지
+  }
+  function step(d){ if(cur && arts[cur._ix + d]) go(arts[cur._ix + d].id); }
+
+  function markNav(id){
+    $$('#sidebar a.nav-link.nav-on').forEach(function(a){ a.classList.remove('nav-on'); });
+    if(!id) return;
+    var link = $('#sidebar a.nav-link[href="#' + id + '"]');
+    if(!link) return;
+    var g = groups.filter(function(gr){ return gr.links.indexOf(link) >= 0; })[0];
+    if(g && g.title.classList.contains('nav-collapsed')) setGroup(g, true), saveGroups();
+    link.classList.add('nav-on');
+    if(link.scrollIntoView) link.scrollIntoView({ block: 'nearest' });
+  }
+
+  function setGroup(g, open){
+    g.title.classList.toggle('nav-collapsed', !open);
+    g.links.forEach(function(a){ a.classList.toggle('nav-hide', !open); });
+  }
+  function saveGroups(){
+    var o = {};
+    groups.forEach(function(g, i){ o[i] = !g.title.classList.contains('nav-collapsed'); });
+    try { localStorage.setItem(LS_CAT, JSON.stringify(o)); } catch(e){}
+  }
+
+  function navFilter(q){
+    q = normQ((q || '').trim());
+    if(!q){
+      $$('#sidebar .nav-f-hide').forEach(function(e){ e.classList.remove('nav-f-hide'); });
+      var st = {}; try { st = JSON.parse(localStorage.getItem(LS_CAT) || '{}'); } catch(e){}
+      groups.forEach(function(g, i){ setGroup(g, st[i] !== false); });
+      return;
+    }
+    groups.forEach(function(g){
+      var any = false;
+      g.links.forEach(function(a){
+        var id = (a.getAttribute('href') || '').slice(1);
+        // 제목만이 아니라 그 글 본문 전체까지 본다 — 제목엔 안 나오고 본문에만 있는 사실도 찾아지도록
+        var art = byId[id];
+        var s = (a.textContent + ' ' + (art ? (art.dataset.tags || '') + ' ' + art.textContent : '')).toLowerCase();
+        var hit = matchQ(s, q);
+        a.classList.toggle('nav-f-hide', !hit);
+        a.classList.remove('nav-hide');                    // 찾는 동안엔 접힘 무시
+        if(hit) any = true;
+      });
+      g.title.classList.toggle('nav-f-hide', !any);
+      g.title.classList.remove('nav-collapsed');
+    });
+  }
+
+  // ══ 이벤트 ════════════════════════════════════════════════════════════
+  function wire(){
+    // capture 단계 — 기존 nav-link 스크롤 핸들러보다 먼저 잡는다
+    document.addEventListener('click', function(e){
+      if(document.body.classList.contains('editing')) return;
+      var t = e.target;
+      var mb = t.closest('#nav-modes button'); if(mb){ applyMode(mb.dataset.mode); return; }
+      if(t.closest('#nav-hub-btn') || t.closest('.db-hub')){ applyMode('hub'); return; }
+      if(t.closest('.db-all')){ var k = cur; applyMode('all'); if(k) setTimeout(function(){ k.scrollIntoView({ block:'start' }); }, 0); return; }
+      if(t.closest('.db-prev')){ step(-1); return; }
+      if(t.closest('.db-next')){ step(1);  return; }
+      var tb = t.closest('#nav-hub .hub-tabs button'); if(tb){ showTab(tb.dataset.tab); return; }
+      var ct = t.closest('#sidebar .nav-cat-title');
+      if(ct){
+        var g = groups.filter(function(x){ return x.title === ct; })[0];
+        if(g){ setGroup(g, ct.classList.contains('nav-collapsed')); saveGroups(); }
+        return;
+      }
+      var lk = t.closest('#sidebar a.nav-link, #nav-hub a[href^="#"]');
+      if(lk){ e.preventDefault(); e.stopPropagation(); go(lk.getAttribute('href').slice(1)); return; }
+      // 문서 모드에서 본문 안 상호참조 링크(관련 글·rel-chip)도 페이지 이동으로
+      var al = t.closest('#content a[href^="#"]');
+      if(al && document.body.classList.contains('mode-doc')){
+        var id = al.getAttribute('href').slice(1);
+        if(byId[id]){ e.preventDefault(); e.stopPropagation(); go(id); return; }
+      }
+      // 태그칩 클릭(기존 기능: 검색어로 넣기) → 결과가 보이도록 전체 모드로
+      if(t.closest('#content .tags .tag')){ setTimeout(function(){ applyMode('all'); }, 0); }
+    }, true);
+
+    var si = $('#search-input');
+    if(si) si.addEventListener('input', function(){
+      if(si.value.trim() && !document.body.classList.contains('mode-all')) applyMode('all');
+    });
+    var nf = $('#nav-filter'); if(nf) nf.addEventListener('input', function(){ navFilter(nf.value); });
+    var hf = $('#hub-filter'); if(hf) hf.addEventListener('input', function(){ hubFilter(hf.value); });
+
+    window.addEventListener('hashchange', function(){
+      var id = (location.hash || '').replace(/^#/, '');
+      if(byId[id] && !document.body.classList.contains('mode-all')) applyMode('doc');
+    });
+
+    document.addEventListener('keydown', function(e){
+      if(document.body.classList.contains('editing')) return;
+      var t = e.target, tag = ((t && t.tagName) || '').toLowerCase();
+      var typing = (tag === 'input' || tag === 'textarea' || (t && t.isContentEditable));
+      if(e.key === 'Escape'){ if(typing) t.blur(); applyMode('hub'); }
+      else if(e.key === '/' && !typing){ e.preventDefault(); var i = $('#search-input'); if(i) i.focus(); }
+      else if(!typing && document.body.classList.contains('mode-doc')){
+        if(e.key === 'ArrowLeft')  step(-1);
+        if(e.key === 'ArrowRight') step(1);
+      }
+    });
+
+    // AI 검색 패널(서버가 런타임 주입)이 근거 아티클로 점프할 때 — 색인/문서 모드면 그 글로 이동시킨 뒤 스크롤
+    if(typeof window.scrollToArticle === 'function'){
+      var _sa = window.scrollToArticle;
+      window.scrollToArticle = function(id){
+        var clean = String(id == null ? '' : id).replace('#', '');
+        if(byId[clean] && !document.body.classList.contains('mode-all')) go(clean);
+        return _sa.apply(this, arguments);
+      };
+    }
+
+    // 편집 모드로 들어가면 전체 보기로 (기존 편집·저장 동작을 건드리지 않기 위해)
+    if(typeof window.toggleEdit === 'function'){
+      var _te = window.toggleEdit;
+      window.toggleEdit = function(on){ if(on) applyMode('all'); return _te.apply(this, arguments); };
+    }
+  }
+
+  // ══ 시작 ══════════════════════════════════════════════════════════════
+  function init(){
+    arts = $$('#content article.article');
+    if(!arts.length) return;
+    arts.forEach(function(a, i){ a._ix = i; if(a.id) byId[a.id] = a; });
+    injectModeBar(); injectSidebar(); injectBars(); wire();
+    var h = (location.hash || '').replace(/^#/, '');
+    if(byId[h]) applyMode('doc');
+    else applyMode(localStorage.getItem(LS_MODE) === 'all' ? 'all' : 'hub');
+  }
+
+  function boot(){
+    try { init(); }
+    catch(err){
+      // 이 층이 실패해도 아카이브 본문은 기존 그대로 보여야 한다
+      document.body.classList.remove('mode-hub','mode-doc');
+      console.warn('[탐색 층] 초기화 실패 — 기존 전체 보기로 계속합니다.', err);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>

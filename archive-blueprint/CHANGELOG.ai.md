@@ -11,6 +11,13 @@ rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영�
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
 
+## 2026-10-16
+- `[STRUCTURE]` **단일 대용량 HTML 아카이브를 개별 마크다운(SSOT) 분할 아키텍처로 개편.**
+  - 무엇: `archive.html` 단일 거대 파일을 카테고리별 `articles/{카테고리}/{id}.md` 마크다운 파일로 분할하여 단일 정본(SSOT)으로 삼고, 유효성 검증과 컴파일을 수행하는 `build_archive.py`를 신설하여 `archive.html`과 `archive-structure.md`를 1초 안에 자동 생성하는 읽기 전용 거울(Mirror) 파이프라인 구축.
+  - 이유: 지식 누적(120개+ 아티클, 1.4MB+)에 따른 단일 HTML 직접 수정 시의 Git 충돌, 컨텍스트 토큰 과다 소모, 정규식 파싱 오류 위험을 원천 차단하고 Git 친화적인 버전 관리 보장.
+  - 영향파일: `articles/*/*.md`, `templates/archive_shell.html`, `templates/structure_footer.md`, `templates/latest_update.txt`, `build_archive.py`, `archive-note.py`, `archive-intake.py`.
+  - 효과: 문의 대응 시 에이전트가 단일 아티클 마크다운 파일(~170줄)만 부분 조회하여 응답 속도 및 토큰 효율 극대화. `archive-note.py` 후속 기록 추가 시 마크다운 정본 갱신 후 거울 파일 자동 동기화.
+
 ## 2026-10-02
 - `[STRUCTURE]` **일 단위 3단 레이어(프로세스·툴박스·증명) 스킬 캡슐화 및 AI 자율 관리(생성·실행·치유) 프로토콜 구축 (INV17).**
   - 배경: 전역 규칙(`SYSTEM_RULES.md`) 비대화로 인한 AI의 컨텍스트 인지 부하를 줄이고, 반복 정형 업무의 실행 정밀도 및 AI 자율 품질 통제력을 극대화.

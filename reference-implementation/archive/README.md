@@ -14,15 +14,17 @@
 - **AI search server** (`archive-server.py`) — serves `archive.html`, retrieves the most relevant
   sections with **BM25 (char-2gram)**, asks the local **Claude CLI**, and scrolls the page to the
   source. `--share` binds `0.0.0.0` for LAN.
+- **Markdown SSOT Compiler** (`build_archive.py`) — compiles individual markdown articles (`articles/*/*.md`) into read-only mirrors: `archive.html` and `archive-structure.md`.
 - **Intake checker** (`archive-intake.py`) — before adding content, flags duplicates, **detects
-  contradictions**, and recommends placement.
+  contradictions**, and recommends placement in markdown structure.
 - **Terminal UI** (`archive-menu.py`) — keyboard-only search/status, for servers/SSH.
-- **Follow-up appender** (`archive-note.py`) — adds a dated one-line follow-up to an existing article (a "📌 follow-ups" section), refusing unbalanced inline tags, a missing/duplicate id, or any change in article count; backs up before writing.
+- **Follow-up appender** (`archive-note.py`) — adds a dated one-line follow-up directly to markdown SSOT articles (`articles/*/*.md`) and automatically recompiles mirrors.
 
 - **AI 검색 서버** — `archive.html` 서빙 + BM25(char-2gram) 검색 → 로컬 Claude CLI 답변 + 원문 위치로 스크롤. `--share`로 LAN 공유.
-- **인테이크 체커** — 추가 전 중복·**모순 충돌** 탐지 + 배치 추천.
+- **마크다운 SSOT 컴파일러** (`build_archive.py`) — 개별 마크다운 아티클(`articles/*/*.md`)을 검증 후 `archive.html` 및 `archive-structure.md` 거울 파일로 자동 일괄 컴파일.
+- **인테이크 체커** — 추가 전 중복·**모순 충돌** 탐지 + 마크다운 정본 배치 경로 추천.
 - **터미널 UI** — 키보드 전용 검색/현황 (서버·SSH용).
-- **후속 기록 도구** — 기존 아티클 끝에 날짜별 후속 한 줄 추가(닫지 않은 태그·id 중복·아티클 수 변화를 쓰기 전에 거부, 백업 후 저장).
+- **후속 기록 도구** (`archive-note.py`) — 마크다운 정본 아티클에 날짜별 후속 한 줄 추가 후 거울 파일 자동 컴파일.
 
 ## Run · 실행
 ```bash
