@@ -9,17 +9,22 @@ last_updated: 2026-07-24
 
 ## SYSTEM SHAPE
 ```
-[archive.html]  ── 단일 파일 지식베이스 (data + UI + CSS + JS, 전부 인라인)
-      ▲
-      │ 읽기/편집
+[articles/{category}/{id}.md] ── 단일 정본 (Markdown SSOT, AI/인간 편집 정본)
       │
-[archive-structure.md]  ── 경량 인덱스 (LLM이 전체 HTML 안 읽도록)
+      │ python build_archive.py (거울 컴파일러)
+      ▼
+┌─────────────────────────────────────────┐
+│ [archive.html]          : 읽기 전용 거울 (Read-Only Mirror)
+│ [archive-structure.md]  : 읽기 전용 경량 인덱스 거울 (Read-Only Mirror)
+└─────────────────────────────────────────┘
       ▲
-      │ 참조
-      │
+      │ 참조/서빙
 ┌─────┴───────────────────────────────────┐
 │  Python 도구 계층 (stdlib 우선 + 선택적 pip) │
-│  - archive-intake.py  : 인테이크 판별 CLI    │
+│  - build_archive.py   : 정본 검증 및 거울 컴파일
+│  - decompile_archive.py: HTML 역추출 도구
+│  - archive-note.py    : 정본 후속 한 줄 추가 + 자동 빌드
+│  - archive-intake.py  : 인테이크 판별 CLI (정본 경로 안내)
 │  - archive-menu.py    : 계층형 TUI          │
 │  - archive-server.py  : 로컬 AI 검색 HTTP 서버│
 └─────────────────────────────────────────┘
@@ -30,8 +35,10 @@ last_updated: 2026-07-24
 [Claude API 또는 Claude Code CLI]  ── ①은 API 키 필요·과금, ②는 로컬 세션 인증·API 키 불요
 ```
 
-## TECH STACK (의도적으로 최소)
-- 데이터/프론트: **순수 HTML5 + 인라인 CSS + 바닐라 JS**. 빌드 스텝 없음. 프레임워크 없음.
+## TECH STACK & SSOT ARCHITECTURE
+- 데이터/정본: **구조화된 Markdown Frontmatter (`articles/{category}/{id}.md`)**. AI와 인간은 오직 정본 마크다운만 수정한다 (HTML 직접 수정은 deprecated).
+- 거울 컴파일러: `build_archive.py` — 엄격한 태그/스키마 검증 후 단일 파일 `archive.html`과 `archive-structure.md`를 100% 자동 생성.
+- 프론트(거울): **순수 HTML5 + 인라인 CSS + 바닐라 JS**.
 - 도구: **Python 3 stdlib 우선** (`re`, `http.server`, `subprocess`, `json`, `pathlib`, `socket`). 검색 랭킹 고도화(`rank_bm25`)와 API 직접호출(`anthropic`)은 선택적 pip 패키지 — 미설치 시 각각 term-count 스코어링·claude -p CLI로 graceful fallback(필수 아님).
 - AI: **Claude API 직접호출(anthropic SDK) 우선 + Claude Code CLI(`claude -p`) 폴백**. API 키 없거나 호출 실패 시 자동으로 CLI(로컬 로그인 세션 재사용)로 전환 — 사용자 체감상 항상 응답이 온다. 강제 CLI 전용 모드는 `ARCHIVE_SERVER_FORCE_CLI=1`.
 - 저장소: 파일시스템. DB 없음.

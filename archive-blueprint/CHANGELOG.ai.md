@@ -3,13 +3,27 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-09-30
+last_updated: 2026-11-02
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
 # CHANGELOG (프로그램·알고리즘·구조)
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
+
+## 2026-11-02
+- `[STRUCTURE]` 스킬 폴더 일원화 — 운영본의 실험적 `skills/` 독립 매뉴얼 폴더(2026-10-02, INV17 초기 구현)를 폐기하고, 호스트 스킬 폴더 `.claude/skills/<name>/SKILL.md`를 유일한 정본으로 삼는다. `.agents/skills/`는 호스트(Codex·Antigravity)용 사본이며, 사본 어긋남은 읽기 전용 점검기 `_check_skills_mirror.py`가 권고한다.
+  - 영향파일: `skills/`(폐기·보관), `.agents/skills/README.md`(신규), `task-dashboard/_check_skills_mirror.py`(신규), `00-INDEX.*`(ARTIFACT MAP).
+  - 이유: 같은 개념의 폴더가 셋(정본·사본·실험)이라 어느 쪽이 정본인지 불분명했고, 실험 폴더의 「AI가 스스로 생성·수정」 조항은 실제로 쓰이지 않았다. INV17의 원칙(3단 레이어·증명 게이트)은 그대로 유지한다.
+- `[ALGO]` 도구 관문 훅 확장 — 같은 실수가 문구 규칙만으로는 재발해, 규칙을 도구로 옮겼다. ① 전송요청(CTS) 설명 컨벤션 검사 + 매 호출 사용자 승인 창 ② 사내 양식 초안의 필수 필드·한 줄 규칙·원문(스킬) 열람 여부 검사 ③ 표준 T-Code의 `코드 — 화면명` 세트 표기 검사 ④ 조회 결과의 음수 부호 소실 경고.
+  - 영향파일: 훅 스크립트 3종(도구 관문·선행검색·턴 종료 점검).
+  - 이유: 「같은 규칙의 재발이 2회 이상이면 개정이 아니라 도구화」(03 문서 원칙). 규칙만 있고 도구가 없는 수기 단계는 반드시 낡는다.
+- `[DOC]` `01-overview-architecture` 를 「마크다운 정본(SSOT) + 자동 생성 거울」 구조로 갱신하고 `00-INDEX` ARTIFACT MAP 을 정정했다(2026-10-16 구조 개편 때 누락된 동기화).
+
+## 2026-10-30
+- `[DEPLOY]` 문의 접수 서버에 **선택형 TLS(HTTPS) 리스너** 추가 — 서버 인증서·키가 지정 폴더(공유 폴더 밖)에 있으면 별도 포트로 HTTPS를 함께 열고, 없으면 기존 HTTP만 동작한다(기존 동작 그대로).
+  - 영향파일: `task-dashboard/intake-server.py`.
+  - 이유: 브라우저는 보안 컨텍스트가 아닌 `http://IP` 주소에서 팝업 알림(Notification)을 막는다. HTTPS가 없으면 새 답변 알림이 탭 제목 표시로만 폴백한다. 개인 키는 공유 폴더에 두지 않는다.
 
 ## 2026-10-16
 - `[STRUCTURE]` **단일 대용량 HTML 아카이브를 개별 마크다운(SSOT) 분할 아키텍처로 개편.**

@@ -3,8 +3,8 @@ doc_type: ai_reference
 audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
-version: 2.6
-last_updated: 2026-10-02
+version: 2.7
+last_updated: 2026-11-02
 read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, 08-autonomous-skill-loop, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
 governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 블루프린트 동기화 + CHANGELOG 기록 의무 (아래 MANDATORY SYNC 참조)"
@@ -44,8 +44,9 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 ## ARTIFACT MAP (원본 아카이브 구성물)
 | 파일 | 역할 | 비고 |
 |------|------|------|
-| `skills/` | 3단 레이어 업무 스킬 캡슐화 허브 (`SKILL.md`·`files/`·`examples/`·`notes.md`) | AI 자율 로드(Auto-Invoke)·자가 추출(Self-Extraction)·증명 게이트(Proof Gate)·자가 치유(Self-Healing). 상세 `08-*` |
-| `archive.html` | 단일 HTML 지식 베이스 (전체 데이터+UI+CSS+JS 인라인) | 수십~수백 아티클 / 5 카테고리(예시 도메인, 계속 증가). AI 패널은 서버가 런타임 주입. **탐색 층**(색인·문서·전체 3모드 + 런타임 역인덱스)이 `</body>` 직전 블록으로 내장 — 상세 `01-*` |
+| `skills/` | (2026-11-02 운영본에서는 폐기 — 호스트 스킬 폴더 `.claude/skills`로 일원화, 원칙 INV17은 유지) 3단 레이어 업무 스킬 캡슐화 허브 (`SKILL.md`·`files/`·`examples/`·`notes.md`) | AI 자율 로드(Auto-Invoke)·자가 추출(Self-Extraction)·증명 게이트(Proof Gate)·자가 치유(Self-Healing). 상세 `08-*` |
+| `articles/{카테고리}/{id}.md` + `build_archive.py` | **지식 베이스의 단일 정본(SSOT, 2026-10-16~)** — 아티클 1개 = 마크다운 1개(Frontmatter 필수). 컴파일러가 검증 후 아래 두 거울을 100% 자동 생성 | 편집은 오직 여기서. 후속 한 줄은 `archive-note.py`(정본 갱신 + 자동 빌드). 상세 `01-*` |
+| `archive.html` | **빌드 생성물(읽기 전용 거울) — 직접 편집 금지.** 단일 HTML 지식 베이스 (전체 데이터+UI+CSS+JS 인라인) | 수십~수백 아티클 / 5 카테고리(예시 도메인, 계속 증가). AI 패널은 서버가 런타임 주입. **탐색 층**(색인·문서·전체 3모드 + 런타임 역인덱스)이 `</body>` 직전 블록으로 내장 — 상세 `01-*` |
 | `archive-structure.md` | 경량 인덱스 (세션마다 전체 HTML 안 읽도록) | id·제목·키워드·카운트. **라인 열 없음**(2026-09-07 폐지 — 수기 라인은 반드시 낡는다; 위치는 `grep -n 'id="…"'`). **헤더 변경이력도 별도 파일로 분리**(2026-09-22 — 「최종 업데이트」 한 줄이 43KB까지 자란 걸 발견해 `archive-structure-changelog.md`로 이관, 헤더엔 최신 1건 요약만) |
 | `archive-intake.py` | 신규 정보 인테이크 — 중복·충돌·배치 자동 판별 CLI | 동의어확장·충돌패턴·카테고리분류 |
 | `archive-menu.py` | 계층형 대화 메뉴 (검색/인테이크/현황/참조) | TUI |
