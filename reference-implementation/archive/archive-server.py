@@ -99,17 +99,19 @@ def load():
         seg     = _html[m.start(): m.start() + 600]
         title_m = re.search(r'class="at">([^<]+)', seg)
         badge_m = re.search(r'class="badge[^"]*">([^<]+)', seg)
-        tags_m  = re.search(r'data-tags="([^"]*)"', _html[m.start(): m.start() + 400])
-        # estimate end of article body
-        end_m   = re.search(r'</article>', _html[m.start():m.start() + 30000])
-        end     = m.start() + end_m.end() if end_m else m.start() + 15000
+        tags_m  = re.search(r'data-tags="([^"]*)"', _html[m.start(): m.start() + 600])
+        rel_m   = re.search(r'data-related="([^"]*)"', _html[m.start(): m.start() + 600])
+        # exact end of article body (fixes legacy 30,000-char regex slice truncation)
+        close_idx = _html.find('</article>', m.start())
+        end       = (close_idx + len('</article>')) if close_idx != -1 else len(_html)
         _arts.append({
-            "id":    m.group(1),
-            "title": re.sub(r"\s+", " ", title_m.group(1)).strip() if title_m else "?",
-            "cat":   re.sub(r"\s+", " ", badge_m.group(1)).strip() if badge_m else "?",
-            "tags":  tags_m.group(1) if tags_m else "",
-            "pos":   m.start(),
-            "end":   end,
+            "id":      m.group(1),
+            "title":   re.sub(r"\s+", " ", title_m.group(1)).strip() if title_m else "?",
+            "cat":     re.sub(r"\s+", " ", badge_m.group(1)).strip() if badge_m else "?",
+            "tags":    tags_m.group(1) if tags_m else "",
+            "related": rel_m.group(1) if rel_m else "",
+            "pos":     m.start(),
+            "end":     end,
         })
     build_index()
 

@@ -193,12 +193,23 @@ def main():
                 cls_parts.append("old")
             cls_str = " ".join(cls_parts)
 
+            # Auto-Lineage Knowledge Graph: scan manual data_related + body/keyword ID references
+            manual_rel = str(fm.get("data_related") or "").split()
+            auto_rel = list(dict.fromkeys(r for r in manual_rel if r and r != aid and r in seen_ids))
+            scan_hay = f"{fm.get('struct_keywords', '')} {body}"
+            for cand_id in seen_ids:
+                if cand_id == aid or cand_id in auto_rel:
+                    continue
+                if re.search(rf'(?:^|[\s"#`(])({re.escape(cand_id)})(?:$|[\s"`)>,.:;])', scan_hay):
+                    auto_rel.append(cand_id)
+            merged_related = " ".join(auto_rel[:12])
+
             # Data attributes
             data_attrs = []
             if fm.get("data_cat"):
                 data_attrs.append(f'data-cat="{fm["data_cat"]}"')
-            if fm.get("data_related"):
-                data_attrs.append(f'data-related="{fm["data_related"]}"')
+            if merged_related:
+                data_attrs.append(f'data-related="{merged_related}"')
             if fm.get("data_tags"):
                 data_attrs.append(f'data-tags="{fm["data_tags"]}"')
 

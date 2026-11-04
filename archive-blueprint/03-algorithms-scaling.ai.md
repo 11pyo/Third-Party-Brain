@@ -1,8 +1,8 @@
 ---
 doc_type: ai_reference
 topic: search_intake_algorithms_and_scaling_thresholds
-version: 1.4
-last_updated: 2026-07-24
+version: 1.5
+last_updated: 2026-11-04
 critical: "이 문서는 규모(N=아티클 수)에 따라 알고리즘을 언제 바꿔야 하는지 정의한다. 재구축/확장 시 필수 참조."
 ---
 
@@ -10,8 +10,7 @@ critical: "이 문서는 규모(N=아티클 수)에 따라 알고리즘을 언�
 
 ## A. 검색 알고리즘 (현재, archive-server.py::search_relevant / rank_article_ids)
 ```
-0. 인덱스: 서버 기동 시(load 끝 build_index()) 각 아티클 텍스트(제목+태그+본문)를 char-2gram
-   토큰화 → BM25Okapi 인덱스 1회 구축(_bm25, _bm25_ids). 의존성: rank_bm25.
+0. 인덱스: 서버 기동 시(load 끝 build_index()) 각 아티클의 정확한 `</article>` 종료 경계를 탐색(구형 30,000자 정규식 슬라이싱 절단 버그 제거 → 30KB 초과 대용량 아티클도 100% 무손실 색인)하고 텍스트(제목+태그+본문)를 char-2gram 토큰화 → BM25Okapi 인덱스 1회 구축(_bm25, _bm25_ids). 의존성: rank_bm25.
 1. 질의어 추출: re.findall([A-Za-z가-힣][...]+) → 동의어 확장(expand_query). (※ 확장본은 6번 발췌용)
 2. 랭킹(rank_article_ids): 원질의를 char-2gram 토큰화 → bm25.get_scores → 상위 top_n(=3).
    IDF(흔한 코드 노이즈 하향)·문서길이 정규화(긴 글 편향 보정)는 BM25가 처리.
@@ -52,21 +51,28 @@ paraphrase-multilingual-MiniLM-L12-v2)을 결합하면 동의어 사전에 없�
 > 무효화되지 않는다(그 권고는 코퍼스가 훨씬 커지고 성격이 달라진 뒤의 얘기) — 다만 그
 > 시점에도 "임베딩=항상 이득"이라 가정하지 말고 매번 회귀 테스트할 것이 이번 실측의 교훈.
 
-## B. 인테이크 알고리즘 (archive-intake.py)
+## B. 인테이크 알고리즘 v2.0 (archive-intake.py — SSOT 마크다운 직결 & 하이브리드 BM25 품질 게이트, 2026-11-04 개편)
 ```
-1. expand_keywords(ALIASES)
-2. search_archive → 아티클별 히트 집계
-3. detect_conflict(CONFLICT_PAIRS): 절차 순서 역전 정규식쌍 매칭 (하드 [!!])
-3b. detect_definition_divergence: **사전 아티클(DICT_ARTICLES)끼리만** 같은 코드의 뒤따르는 '설명'을 글자 bigram Jaccard<0.18로 비교 → '[?] 정의 불일치 의심'(휴리스틱·오탐 가능). 비-사전 산문 인용·링크 조각은 _looks_definitional로 제외. 목적: 한 코드가 사전 글마다 다른 정의(예: 'CR/DR 이력'↔'반품 이력')로 어긋난 '정의 충돌' 포착. 한계: 표현차/교차언급에 잔여 오탐 1~2건 가능(정밀도 한계, advisory).
-4. 중복도: 신규텍스트 단어집합 ∩ 기존 / |신규| > 0.7 → 중복경고
-5. suggest_category(CATEGORY_SIGNALS): 시그널 키워드 카운트
-6. 판정: NEW(0히트) / UPDATE(1아티클) / REVIEW(2+) / CONFLICT
+0. 정본 로드(load_ssot_articles): 컴파일 거울(archive.html) 대신 마크다운 정본(articles/*/*.md)의
+   YAML Frontmatter(id, title, category, data_tags, struct_keywords, tag_chips)와 본문을 직접 파싱
+   (인메모리 캐시 지원, 폴더 부재 시 archive.html 폴백).
+1. expand_keywords(ALIASES) + 헤더(제목·키워드) 가중치(4.0x) 및 char-2gram BM25 점수 결합으로
+   관련도 순 아티클 정렬(단순 HTML 등장 순서 폐기).
+2. detect_conflict(CONFLICT_PAIRS): 절차 순서 역전 정규식쌍 매칭 (하드 [!!] CONFLICT).
+3. detect_definition_divergence: 사전 아티클(DICT_ARTICLES) 간 비교뿐 아니라 **신규 입력 텍스트(--text)에
+   등장하는 코드 설명과 기존 사전 정의 간 불일치**까지 글자 bigram Jaccard<0.18로 대조 → '[?] 정의 불일치 의심'.
+4. 하이브리드 중복도(compute_similarity): 구형 공백 단어 교집합(한국어 조사 변이에 취약)을 폐기하고
+   `0.6 * char_2gram_recall + 0.4 * token_recall > 0.68` 시 [DUP] 중복 경고.
+5. suggest_category(CATEGORY_SIGNALS) 및 SSOT 마크다운 액션 안내(`articles/<cat>/<id>.md` 편집/생성 후
+   `python build_archive.py` 실행 또는 `archive-note.py` 후속 한 줄 추가).
 ```
 
-## B2. 링크·backlink 렌더 알고리즘 (archive.html 인라인 JS, data-related) — 2026-06-24
+## B2. 컴파일 타임 자동 지식 그래프(Auto-Lineage) & backlink 렌더 알고리즘 (build_archive.py + archive.html, 2026-11-04 확장)
 ```
-0. 메타: 각 article에 data-related="id id ..."(# 없는 공백구분 아티클 id). 본문 무손상·속성만 추가.
-   동반 메타 data-cat/data-topics/data-updated(현 렌더 미소비, 향후 필터용). 통제어휘=META_TAG_SCHEMA(원본폴더).
+0. 컴파일 타임 자동 리니지(build_archive.py): 마크다운 정본의 수기 `data_related`에 더해, 컴파일 시점에
+   각 아티클의 `struct_keywords`와 본문(`body`)에서 전체 유효 아티클 ID(`seen_ids`) 참조를 정규식으로 자동 스캔하여
+   `data-related` 속성에 병합 주입(원본 `.md` 무수정, 자기참조·중복 제외, 최대 12개).
+   → 수기 입력 공수 0건으로 양방향 지식 그래프 연결 커버리지를 11.7%(15/128)에서 **93.0%(119/128, 415 엣지)**로 확장.
 1. DOMContentLoaded: article.article 수집 → byId 맵 + back(역참조) 인덱스 1회 구축
    (data-related를 역방향 뒤집어 backlink 무료 생성 — 한쪽만 적어도 양방향).
 2. 각 아티클 하단 .rel-panel(data-noexport) 동적 append: 「🔗 관련」=fwd(자기 data-related),

@@ -219,7 +219,15 @@ def main():
     body = load_tasks_md()
     board = load_board()
     problems, notes = [], []
-    problems.extend(check_index_freshness())
+    idx_issues = check_index_freshness()
+    if idx_issues:
+        import subprocess
+        gen_idx = os.path.join(BASE, "_gen_tasks_index.py")
+        if os.path.exists(gen_idx):
+            print("🔄 [Auto-Heal] tasks-index.md 신선도 복구 중 (_gen_tasks_index.py 자동 실행)...")
+            subprocess.run([sys.executable, gen_idx], cwd=BASE)
+            idx_issues = check_index_freshness()
+    problems.extend(idx_issues)
 
     print("tasks.md 카드 {}장 · 보드 TASKS {}건".format(len(body), len(board)))
     print("-" * 66)

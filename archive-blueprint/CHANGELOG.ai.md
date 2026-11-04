@@ -3,13 +3,24 @@ doc_type: ai_reference
 topic: change_log
 purpose: "아카이브의 프로그램·알고리즘·구조 변경 이력. 콘텐츠(아티클) 변경은 여기 기록하지 않음 — archive-structure.md 소관."
 scope: "program | algorithm | structure | encoding | deployment 변경만"
-last_updated: 2026-11-02
+last_updated: 2026-11-04
 rule: "신규 항목은 맨 위. 형식 고정: 날짜 / 분류 / 변경 / 영향파일 / 이유. (B)분류 변경 시 MANDATORY SYNC에 따라 이 파일 + 해당 .ai/.human 문서 동시 갱신."
 ---
 
 # CHANGELOG (프로그램·알고리즘·구조)
 
 > 분류 태그: `[STRUCTURE]` 파일/구성 · `[ALGO]` 검색/인테이크 로직 · `[ENCODING]` 인코딩 · `[DEPLOY]` 실행/배포/공유 · `[DOC]` 블루프린트 문서.
+
+## 2026-11-04
+- `[ALGO]` **엔터프라이즈 데이터 플랫폼(ETL·데이터품질 게이트 + CDW·SSOT·시맨틱 연산) 벤치마킹 기반 4대 코어 모듈 현대화.**
+  - 무엇:
+    ① **인테이크 엔진 v2.0 (`archive-intake.py`)**: 구형 `archive.html` 정규식(+400바이트) 슬라이싱 및 공백 어절 단순 교집합을 폐기하고, 마크다운 정본(`articles/*/*.md`) 직결 파싱 + 헤더 가중치·`char-2gram BM25` 랭킹 + 한국어 조사 변이에 강건한 하이브리드 중복 유사도(`compute_similarity`) + 신규 입력 텍스트(`--text`)↔사전 간 코드 정의 불일치 탐지로 전면 개편.
+    ② **컴파일 타임 자동 지식 그래프 (`build_archive.py` Auto-Lineage)**: 빌드 시 각 아티클의 키워드·본문에서 다른 유효 아티클 ID(`seen_ids`) 참조를 자동 스캔해 `data-related`에 병합 주입. 마크다운 원본 수정이나 수기 입력 공수 없이 양방향 지식 그래프 연결 커버리지를 **11.7%(15/128) → 93.0%(119/128, 총 415 엣지)**로 확장.
+    ③ **검색 서버 대용량 아티클 무손실 색인 (`archive-server.py`)**: 30,000자 초과 대용량 아티클이 `m.start()+30000` 정규식 슬라이싱 실패로 15,000자에서 절단되던 결함을 정확한 `</article>` 종료 위치 탐색으로 수정(전 문서 보존율 100%, 말미 키워드 발췌 검증).
+    ④ **파생 거울 자가 복구 (`_check_board_sync.py` Auto-Heal)**: 결정론적 파생 거울(`tasks-index.md`, 호스트 규칙 파일, `archive.html`)이 정본보다 낡았을 때 생성기를 자동 실행해 즉시 복구 후 재검증(종료코드 0).
+  - 검증: 5종 다중 케이스 검증 스위트(① 근접 중복 98.6% 및 조사 변이 Top-1 적중 ② 역순 절차 충돌·코드 정의 불일치 의도적 결함 주입 포착 ③ 미등록 주제 신규 분류·정본 라우팅 ④ 30,000자 초과 문서 전 구간 보존·말미 패시지 발췌 ⑤ 지식 그래프 119/128 연결·깨진 링크 0·자기참조 0) 전 항목 통과.
+  - 영향파일: `build_archive.py`, `archive-intake.py`, `archive-server.py`, `task-dashboard/_check_board_sync.py`, `archive-blueprint/00-INDEX.*`, `archive-blueprint/03-algorithms-scaling.*`.
+  - 이유: 2026-10-16 마크다운 SSOT 개편 이후에도 인테이크·검색 경계·백링크 부여가 구형 HTML 정규식/수기 방식에 머물러 있던 기술 부채를 해소하고, 사람의 수기 관리 비용(0건)과 워크플로 병목 없이 데이터 품질과 탐색 연결성을 동시에 높이기 위함.
 
 ## 2026-11-02
 - `[STRUCTURE]` 스킬 폴더 일원화 — 운영본의 실험적 `skills/` 독립 매뉴얼 폴더(2026-10-02, INV17 초기 구현)를 폐기하고, 호스트 스킬 폴더 `.claude/skills/<name>/SKILL.md`를 유일한 정본으로 삼는다. `.agents/skills/`는 호스트(Codex·Antigravity)용 사본이며, 사본 어긋남은 읽기 전용 점검기 `_check_skills_mirror.py`가 권고한다.
