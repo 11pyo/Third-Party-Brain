@@ -4,7 +4,7 @@ audience: llm_agent
 purpose: "검색 가능한 운영 지식 아카이브를 0에서 구축·운영·복제하기 위한 방법론 청사진의 진입점(index)"
 canonical_example: "C:/Users/<user>/Documents/SAP SD AI Indexable Archive"
 version: 2.8
-last_updated: 2026-11-04
+last_updated: 2026-11-12
 read_order: [00-INDEX, 01-overview-architecture, 02-buildup-process, 03-algorithms-scaling, 04-replication-playbook, 05-operational-layer, 06-automation-and-ops-model, 07-dashboard-operating-guide, 08-autonomous-skill-loop, CHANGELOG]
 pairing: "각 문서는 .ai.md(에이전트용) + .human.md(사람용) 쌍으로 존재. 동일 내용의 다른 표현."
 governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 블루프린트 동기화 + CHANGELOG 기록 의무 (아래 MANDATORY SYNC 참조)"
@@ -76,6 +76,7 @@ governance: "아카이브의 프로그램·알고리즘·구조 변경 시 이 �
 | `vacation/probe_isolation.py` · `vacation/tests/` | (운영레이어) 격리 실측 도구 + 시험 모음(`run_all.py` 한 줄로 전체) | 격리는 **말이 아니라 흔적**으로 판정(파일이 실제로 생겼는지). 시험은 임시폴더에서 돌아 공유본을 더럽히지 않는다. 상세 07 R22 |
 | `vacation/policies/` · `vacation/tests/unit_gemini.py` | (운영레이어) 대체 엔진 격리 정책(기본 거부 + 읽기·찾기·웹만 허용, 최상위 등급으로 주입) + 그 경로 회귀 시험 | 시험이 매번 「권한 생략 옵션 없음」·「허용 목록 밖 도구 0」을 단언한다. 정책을 넓히려면 격리 실측부터 다시. |
 | `vacation/bench/` | (운영레이어) 모델 비교 벤치 + **재생 평가**(`replay.py`) — 더미 사본 · 같은 프롬프트 실행 · 미리 정한 기준(검증 = 답을 보기 전에 고정 + AI 초안)으로 출처를 가린 자동 채점 · 채점기 검증(`calibrate`) · 기록 `history.jsonl` | 작업 폴더는 공유본 밖(단언으로 강제). 과거 답(선례)을 사본에서 지워 베끼기를 막는다. 채점 기준은 답을 보기 전에 고정. 채점기는 항목 점수만, **상한 · 차감은 코드**. 점수는 앞뒤 비교용(절대 정확도 아님). 같은 실행 재채점 흔들림 ±2.5/80 |
+| `cbo-impact/` (`extract_*.py` · `derive_uses.py` · `impact.py` · `review_usage.py` · `test_tools.py`) | (운영레이어) **변경 영향 조회** — 업무 시스템의 교차 참조표를 읽기 전용으로 추출해 「사용 관계」 그래프를 만들고, 어떤 오브젝트를 고쳤을 때 함께 볼 범위를 단계별로 조회(글 목록 · JSON · 단일 파일 동적 그래프). 과거에 함께 반영된 오브젝트도 같이 보여 준다 | 추출은 조회문만·대상 고정·허용 도구 2개. **가져온 행 수 = 원본 건수** 대사와 파일 해시가 맞아야 다음 단계가 돈다(어긋나면 멈춤, 무시는 명시 옵션 + 기록). 버리는 행은 전부 건수로 남긴다. 추출 데이터·서버 로그는 **공유 폴더 밖 로컬**. 결과는 스냅샷이며 「영향 없음」의 근거로 쓰지 않는다. 상세 CHANGELOG 2026-11-12 |
 | `_gen_host_rules.py` | (운영레이어) 규칙 정본 → 모델 독립 정본 + 호스트별 규칙 파일 **생성** | 손으로 맞추면 낡는다(실측 4건 누락) → 생성물로 전환하고 점검 스크립트가 신선도를 막는다. 상세 07 R22 |
 | `vacation/apply_answer.py` | (운영레이어) 쓰기 게이트 — 원표봇 판정을 `inquiry-log.js` 에 기록하는 유일한 통로 | 표기 강제·항상 「대기」·재조회 확인·journal. note 는 답변에 붙이지 않음(journal → 복귀 보고서 「담당자용 메모」). 접수 확인은 답변란이 빌 때만. 내부 식별자(작업카드·문의·추적 번호) 패턴이 공개 답변에 남으면 정규식으로 걸러 표준 문구로 되돌림(R21). `log-inquiry.py` 경유. 상세 07 R14 · R21 |
 | `vacation/config.json` · `vacation/sysmode.ps1` | (운영레이어) 부재중 모드 설정(디바운스·배치·일일 한도·재시도·타임아웃) + PC 무중단 스크립트(AC 절전 해제·자동 업데이트/재부팅 차단 — 변경 전 백업, off 시 원복) | 상세 07 |

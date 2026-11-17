@@ -23,3 +23,6 @@ server.log
 .mcp.json
 NOTES.local.md
 *.local.md
+
+# 로컬 작업 백업 복사본 — 추적하지 않음 (2026-11-18)
+*.bak_*
